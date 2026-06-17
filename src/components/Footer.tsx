@@ -25,7 +25,6 @@ export default function Footer() {
           <div>
             <p className="text-sm font-medium">{f.contact}</p>
             <ul className="mt-3 space-y-2 text-sm text-white/50">
-              <li>{f.phone}</li>
               <li>{f.hours}</li>
               <li>
                 <a
