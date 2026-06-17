@@ -8,6 +8,10 @@ import {
   removeLightBackgroundFromBuffer,
   shouldRemoveLightBackground,
 } from "@/lib/remove-light-background";
+import {
+  optimizeRasterBuffer,
+  writeOptimizedRasterFiles,
+} from "@/lib/optimize-image";
 
 export { IMAGE_UPLOAD_MAX_BYTES, imageExtFromFile, validateImageFile } from "@/lib/image-upload-shared";
 
@@ -30,19 +34,25 @@ export async function saveImageToPublic(
   const dir = join(process.cwd(), "public", subdir);
   await mkdir(dir, { recursive: true });
 
-  let output = bytes;
-  let outputName = filename;
+  if (ext === "svg" || ext === "gif") {
+    await writeFile(join(dir, filename), bytes);
+    return `/${subdir.replace(/\\/g, "/")}/${filename}`;
+  }
+
+  let rasterBytes = bytes;
+  let baseName = filename.replace(/\.[^.]+$/, "");
 
   if (options.removeLightBackground && shouldRemoveLightBackground(ext)) {
     try {
-      output = Buffer.from(await removeLightBackgroundFromBuffer(bytes));
-      outputName = filename.replace(/\.[^.]+$/, ".png");
+      rasterBytes = Buffer.from(await removeLightBackgroundFromBuffer(bytes));
+      baseName = filename.replace(/\.[^.]+$/, "");
     } catch {
-      /* sharp 失败时保存原图，避免整次上传失败 */
+      /* sharp 失败时继续用原图压缩 */
     }
   }
 
-  await writeFile(join(dir, outputName), output);
+  const optimized = await optimizeRasterBuffer(rasterBytes);
+  await writeOptimizedRasterFiles(dir, baseName, optimized);
 
-  return `/${subdir.replace(/\\/g, "/")}/${outputName}`;
+  return `/${subdir.replace(/\\/g, "/")}/${baseName}.png`;
 }

@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import OptimizedRasterImage from "@/components/OptimizedRasterImage";
 import type { HeroShowcaseFrame } from "@/lib/hero-iphone-cutouts";
 import {
   HERO_SHOWCASE_FRAMES,
   HERO_SHOWCASE_INTERVAL_MS,
 } from "@/lib/hero-iphone-cutouts";
 import {
-  getHeroWebpUrl,
   HERO_IMAGE_DISPLAY_HEIGHT,
   HERO_IMAGE_DISPLAY_WIDTH,
-  heroSupportsWebp,
 } from "@/lib/hero-image-url";
 
 type Props = {
@@ -18,33 +17,9 @@ type Props = {
   frames?: HeroShowcaseFrame[];
 };
 
-function HeroSlideImage({
-  src,
-  alt,
-  priority,
-}: {
-  src: string;
-  alt: string;
-  priority?: boolean;
-}) {
-  const webp = getHeroWebpUrl(src);
-  const useWebp = heroSupportsWebp(src);
-
-  return (
-    <picture>
-      {useWebp ? <source srcSet={webp} type="image/webp" /> : null}
-      <img
-        src={src}
-        alt={alt}
-        width={HERO_IMAGE_DISPLAY_WIDTH}
-        height={HERO_IMAGE_DISPLAY_HEIGHT}
-        className="hero-phone-img"
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : "low"}
-        decoding="async"
-      />
-    </picture>
-  );
+function initialLoadedIndices(slideCount: number, mobile: boolean): Set<number> {
+  if (slideCount <= 1) return new Set([0]);
+  return new Set(mobile ? [0] : [0, 1]);
 }
 
 export default function HeroIphoneShowcase({ alt, frames = HERO_SHOWCASE_FRAMES }: Props) {
@@ -54,7 +29,7 @@ export default function HeroIphoneShowcase({ alt, frames = HERO_SHOWCASE_FRAMES 
     [slides],
   );
   const [activeIndex, setActiveIndex] = useState(0);
-  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set([0, 1]));
+  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set([0]));
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -66,7 +41,8 @@ export default function HeroIphoneShowcase({ alt, frames = HERO_SHOWCASE_FRAMES 
 
   useEffect(() => {
     setActiveIndex(0);
-    setLoadedIndices(new Set(slides.length > 1 ? [0, 1] : [0]));
+    const mobile = window.matchMedia("(max-width: 768px)").matches;
+    setLoadedIndices(initialLoadedIndices(slides.length, mobile));
   }, [slideKey, slides.length]);
 
   useEffect(() => {
@@ -98,10 +74,15 @@ export default function HeroIphoneShowcase({ alt, frames = HERO_SHOWCASE_FRAMES 
                 }${frame.wide ? " hero-phone-frame-wide" : ""}`}
               >
                 {loadedIndices.has(index) ? (
-                  <HeroSlideImage
+                  <OptimizedRasterImage
                     src={frame.src}
                     alt={`${alt} — ${frame.label}`}
-                    priority={index === 0}
+                    width={HERO_IMAGE_DISPLAY_WIDTH}
+                    height={HERO_IMAGE_DISPLAY_HEIGHT}
+                    className="hero-phone-img"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchPriority={index === 0 ? "high" : "low"}
+                    decoding="async"
                   />
                 ) : null}
               </div>

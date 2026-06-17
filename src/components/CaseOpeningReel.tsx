@@ -71,7 +71,7 @@ export default function CaseOpeningReel({
 
   const idleTrack = useMemo(() => {
     if (pool.length === 0) return [];
-    return [...pool, ...pool, ...pool];
+    return [...pool, ...pool];
   }, [pool]);
 
   const calcCenterOffset = useCallback((index: number) => {
