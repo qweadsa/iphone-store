@@ -80,7 +80,8 @@ export const en = {
     drawOrderEmail: "Lookup email",
     trackOrder: "View order",
     orderDismiss: "OK",
-    homepageTeaser: "🎁 Mystery Box — Win iPhone 17 Pro Max!",
+    walletDiscountNote: "Wallet credit {wallet} applied · pay {cash}",
+    homepageTeaser: "🎁 Mystery Gift Box — Win iPhone 17 Pro Max!",
   },
   landing: {
     winRate: "🏆 {name} · {rate} win rate",
@@ -107,9 +108,9 @@ export const en = {
     perOpen: "/ per open",
     fixedCtaBtn: "Open Now",
     mobile: {
-      activityTag: "🔥 High-Chance iPhone Box Today",
+      activityTag: "🔥 High-Chance iPhone Gift Box Today",
       titleLine1: "High Chance",
-      titleLine2: "iPhone Mystery Box",
+      titleLine2: "iPhone Surprise Gift Box",
       titleHighlight1: "High Chance",
       titleHighlight2: "iPhone",
       subtitle:

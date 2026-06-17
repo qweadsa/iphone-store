@@ -14,9 +14,10 @@ export async function applyDrawCredit(
   },
   userId: number,
 ): Promise<boolean> {
-  if (draw.creditApplied || draw.fulfillmentType !== "credit") return false;
+  if (draw.creditApplied) return false;
   const amount = draw.creditAmount;
   if (amount == null || amount <= 0) return false;
+  if (draw.fulfillmentType !== "credit" && draw.fulfillmentType !== "coupon") return false;
 
   await tx.user.update({
     where: { id: userId },

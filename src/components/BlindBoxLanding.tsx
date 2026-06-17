@@ -17,7 +17,9 @@ import { displayPrizeName } from "@/lib/prize-display";
 import { getPrizeImageUrl } from "@/lib/prize-images";
 import PrizeVisual from "@/components/PrizeVisual";
 import { getPrizeDisplayOdds } from "@/lib/probability";
-import { injectConfigPrice, formatMarketPrice } from "@/lib/locale-resolve";
+import { injectConfigPrice } from "@/lib/locale-resolve";
+import BlindBoxOpenPrice from "@/components/BlindBoxOpenPrice";
+import { useBlindBoxCheckout } from "@/lib/use-blindbox-checkout";
 import {
   formatDemoWinnerTimeLabel,
   resolveDemoWinnerMinutesAgo,
@@ -132,6 +134,7 @@ export default function BlindBoxLanding({
   const l = m.landing;
   const mob = l.mobile;
   const a = m.auth;
+  const checkout = useBlindBoxCheckout(config.price);
 
   const drawWeight = prizes.filter(isDrawablePrize).reduce((s, p) => s + p.weight, 0);
   const visiblePrizes = useMemo(
@@ -242,7 +245,7 @@ export default function BlindBoxLanding({
   return (
     <div className="bg-[#03030A] pb-24 text-[#F5F5F7] md:pb-0">
       <MobileFixedCta
-        price={config.price}
+        fullPrice={config.price}
         priceLabel={l.perOpen}
         buttonLabel={l.fixedCtaBtn}
       />
@@ -271,11 +274,9 @@ export default function BlindBoxLanding({
               {config.heroSubtitle ?? mob.subtitle}
             </p>
 
-            <div className="mt-5 flex items-baseline gap-1.5">
-              <span className="text-[40px] font-black text-[#FFB800] lg:text-[44px]">
-                {formatMarketPrice(config.price, locale)}
-              </span>
-              <span className="text-[14px] text-white/55">{l.perOpen}</span>
+            <div className="mt-5">
+              <BlindBoxOpenPrice fullPrice={config.price} size="hero" />
+              <span className="mt-0.5 block text-[14px] text-white/55">{l.perOpen}</span>
             </div>
 
             <div className="mt-[18px] flex flex-col gap-3 sm:max-w-md">
@@ -283,7 +284,7 @@ export default function BlindBoxLanding({
                 href="#draw"
                 className="cta-breathe flex h-[58px] w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] text-[16px] font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
               >
-                {injectConfigPrice(b.drawNow, config.price, locale)}
+                {injectConfigPrice(b.drawNow, checkout.cashDue, locale)}
               </a>
               <a
                 href="#prizes"
@@ -491,7 +492,7 @@ export default function BlindBoxLanding({
             href="#draw"
             className="cta-breathe mt-8 inline-block rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-12 py-4 text-base font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
           >
-            {injectConfigPrice(b.drawNow, config.price, locale)}
+            {injectConfigPrice(b.drawNow, checkout.cashDue, locale)}
           </a>
         </div>
       </section>

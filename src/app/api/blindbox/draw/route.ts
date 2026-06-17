@@ -159,7 +159,10 @@ export async function POST(req: Request) {
     const userId = user?.id ?? payment.userId ?? null;
     const email = user?.email ?? payment.email ?? null;
     const fulfillment = getPrizeFulfillment(prize);
-    const fulfillmentType = fulfillment?.type ?? prize.fulfillmentType ?? prize.key;
+    const fulfillmentType =
+      fulfillment?.type === "credit"
+        ? "credit"
+        : (fulfillment?.type ?? prize.fulfillmentType ?? prize.key);
     const creditAmount = fulfillment?.type === "credit" ? fulfillment.amount : null;
 
     let credited = false;

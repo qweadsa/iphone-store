@@ -1,22 +1,26 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n-context";
-import { formatMarketPrice } from "@/lib/locale-resolve";
+import { injectConfigPrice } from "@/lib/locale-resolve";
+import { useBlindBoxCheckout } from "@/lib/use-blindbox-checkout";
+import BlindBoxOpenPrice from "@/components/BlindBoxOpenPrice";
 
 type Props = {
-  price: number;
+  fullPrice: number;
   priceLabel: string;
   buttonLabel: string;
   alwaysVisible?: boolean;
 };
 
 export default function MobileFixedCta({
-  price,
+  fullPrice,
   priceLabel,
   buttonLabel,
   alwaysVisible = true,
 }: Props) {
-  const { locale } = useI18n();
+  const { locale, messages: m } = useI18n();
+  const checkout = useBlindBoxCheckout(fullPrice);
+  const drawLabel = injectConfigPrice(m.blindBox.drawNow, checkout.cashDue, locale);
 
   if (!alwaysVisible) return null;
 
@@ -27,16 +31,14 @@ export default function MobileFixedCta({
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[22px] font-black leading-none text-[#FFB800]">
-            {formatMarketPrice(price, locale)}
-          </p>
+          <BlindBoxOpenPrice fullPrice={fullPrice} size="compact" showWalletNote={false} />
           <p className="mt-0.5 text-[11px] text-white/55">{priceLabel}</p>
         </div>
         <a
           href="#draw"
-          className="cta-breathe flex h-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-8 text-[15px] font-bold text-[#03030A] shadow-[0_12px_32px_rgba(255,122,0,0.35)]"
+          className="cta-breathe flex h-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-5 text-[13px] font-bold text-[#03030A] shadow-[0_12px_32px_rgba(255,122,0,0.35)]"
         >
-          {buttonLabel}
+          {buttonLabel.includes("RM") || buttonLabel.includes("$") ? drawLabel : buttonLabel}
         </a>
       </div>
     </div>

@@ -20,8 +20,8 @@ export async function POST(req: Request) {
     if (!draw) {
       return NextResponse.json({ error: "Draw not found" }, { status: 404 });
     }
-    if (draw.fulfillmentType !== "credit") {
-      return NextResponse.json({ error: "此奖品不是返现类型" }, { status: 400 });
+    if (!draw.creditAmount || draw.creditAmount <= 0) {
+      return NextResponse.json({ error: "此奖品不是钱包抵扣类型" }, { status: 400 });
     }
     if (draw.creditApplied) {
       return NextResponse.json({ credited: true, amount: draw.creditAmount });

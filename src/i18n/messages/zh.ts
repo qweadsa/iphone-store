@@ -80,6 +80,7 @@ export const zh: Messages = {
     trackOrder: "查看订单",
     orderDismiss: "确定",
     oddsNote: "展示概率由后台单独设置，与真实抽奖权重无关。",
+    walletDiscountNote: "钱包已抵扣 {wallet}，实付 {cash}",
     homepageTeaser: "🎁 神秘礼盒 — 赢取 iPhone 17 Pro Max！",
   },
   landing: {

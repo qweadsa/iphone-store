@@ -33,12 +33,21 @@ export type PrizeFulfillment =
   | { type: "retry" }
   | null;
 
+/** 名称含 RM/MYR/$ 金额且无百分比的优惠券 → 进钱包抵扣 */
+export function hasFixedMoneyCoupon(prizeName: string): boolean {
+  if (/\d+\s*%/.test(prizeName)) return false;
+  return /(?:RM|MYR|\$)\s*[\d,.]+/i.test(prizeName);
+}
+
 export function getPrizeFulfillment(prize: BlindBoxPrize): PrizeFulfillment {
   const kind = prize.fulfillmentType ?? prize.key;
   switch (kind) {
     case "credit":
       return { type: "credit", amount: parseCreditAmount(prize.name) };
     case "coupon": {
+      if (hasFixedMoneyCoupon(prize.name)) {
+        return { type: "credit", amount: parseCreditAmount(prize.name) };
+      }
       const pct = prize.name.match(/(\d+)%/);
       return {
         type: "coupon",

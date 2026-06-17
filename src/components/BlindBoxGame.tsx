@@ -12,6 +12,7 @@ import { displayPrizeName } from "@/lib/prize-display";
 import PaymentModal from "./PaymentModal";
 import GrandConfetti from "./GrandConfetti";
 import { injectConfigPrice } from "@/lib/locale-resolve";
+import { useBlindBoxCheckout } from "@/lib/use-blindbox-checkout";
 
 const CaseOpeningReel = dynamic(() => import("./CaseOpeningReel"), {
   ssr: false,
@@ -64,6 +65,7 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
   const [drawError, setDrawError] = useState("");
   const [showPay, setShowPay] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const checkout = useBlindBoxCheckout(config.price);
 
   const reelPool = useMemo(() => {
     try {
@@ -274,8 +276,8 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
             }`}
           >
             {phase === "done"
-              ? injectConfigPrice(b.tryAgainBtn, config.price, locale)
-              : injectConfigPrice(b.drawNow, config.price, locale)}
+              ? injectConfigPrice(b.tryAgainBtn, checkout.cashDue, locale)
+              : injectConfigPrice(b.drawNow, checkout.cashDue, locale)}
           </button>
         ) : null}
       </div>
@@ -286,7 +288,7 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
 
       {showPay && (
         <PaymentModal
-          amount={config.price}
+          amount={checkout.cashDue}
           purpose="blindbox"
           title={p.blindboxTitle}
           onClose={() => setShowPay(false)}

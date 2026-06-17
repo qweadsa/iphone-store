@@ -129,6 +129,11 @@ export default function PaymentModal({
         }
         setPayment(data);
         paymentIdRef.current = data.paymentId;
+        if (data.status === "completed") {
+          completedRef.current = true;
+          onSuccessRef.current(data.paymentId);
+          return;
+        }
         setActiveQr(data.methodQrs?.[DEFAULT_CHECKOUT_METHOD] ?? null);
         if (!user) setEmailSaved(true);
       } catch {

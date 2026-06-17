@@ -72,6 +72,7 @@ export const ms = {
     tryAgainBtn: "Buka Lagi — RM59",
     disclaimer: "Peluang berbeza mengikut hadiah. Lihat terma acara untuk butiran.",
     oddsNote: "Peluang paparan ditetapkan dalam admin dan tidak mempengaruhi cabutan sebenar.",
+    walletDiscountNote: "Dompet tolak {wallet} · bayar {cash}",
     addedToCart: "Cabutan kotak hadiah ditambah ke beg",
     drawFailed: "Cabutan gagal. Sila cuba lagi.",
     drawOrderTitle: "Nombor pesanan anda",
