@@ -31,8 +31,12 @@ export default function MobileFixedCta({
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <BlindBoxOpenPrice fullPrice={fullPrice} size="compact" showWalletNote={false} />
-          <p className="mt-0.5 text-[11px] text-white/55">{priceLabel}</p>
+          <BlindBoxOpenPrice
+            fullPrice={fullPrice}
+            size="compact"
+            showWalletNote={false}
+            perOpenLabel={priceLabel}
+          />
         </div>
         <a
           href="#draw"

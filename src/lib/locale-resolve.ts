@@ -1,5 +1,5 @@
 import {
-  MARKET_CURRENCY,
+  MARKET_CURRENCY_SYMBOL,
   normalizeGrandPrizeValue,
   normalizeMarketText,
 } from "@/lib/market";
@@ -30,13 +30,12 @@ function priceLocaleTag(locale: string): string {
   return "en-MY";
 }
 
-/** 全站统一显示 market.config 中的货币 */
+/** 全站统一显示 market.config 中的货币符号（马来西亚用 RM，不用 ISO 代码 MYR） */
 export function formatMarketPrice(price: number, locale: string): string {
-  return new Intl.NumberFormat(priceLocaleTag(locale), {
-    style: "currency",
-    currency: MARKET_CURRENCY,
+  const amount = new Intl.NumberFormat(priceLocaleTag(locale), {
     maximumFractionDigits: 0,
   }).format(price);
+  return `${MARKET_CURRENCY_SYMBOL}${amount}`;
 }
 
 export { normalizeGrandPrizeValue, normalizeMarketText };
@@ -46,5 +45,6 @@ export function injectConfigPrice(text: string, price: number, locale: string): 
   const formatted = formatMarketPrice(price, locale);
   return normalizeMarketText(text)
     .replace(/RM[\d,]+/g, formatted)
+    .replace(/MYR\s*[\d,]+/gi, formatted)
     .replace(/\$[\d,]+/g, formatted);
 }

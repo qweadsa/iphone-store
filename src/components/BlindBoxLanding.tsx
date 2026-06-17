@@ -271,8 +271,7 @@ export default function BlindBoxLanding({
             </p>
 
             <div className="mt-5 lg:mt-4">
-              <BlindBoxOpenPrice fullPrice={config.price} size="hero" />
-              <span className="mt-0.5 block text-[14px] text-white/55">{l.perOpen}</span>
+              <BlindBoxOpenPrice fullPrice={config.price} size="hero" perOpenLabel={l.perOpen} />
             </div>
 
             <div className="mt-[18px] flex flex-col gap-3 sm:max-w-md">
