@@ -115,8 +115,8 @@ export const zh: Messages = {
       titleHighlight2: "iPhone",
       subtitle:
         "每次开启都有真实奖励，幸运用户可获得 iPhone 大奖。",
-      grandEyebrow: "TODAY GRAND PRIZE",
-      grandSubtitle: "Limited grand prize today",
+      grandEyebrow: "今日终极大奖",
+      grandSubtitle: "今日限量大奖，先到先得",
       winBadge: "WIN",
     },
     faq: [

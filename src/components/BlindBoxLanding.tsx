@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import BlindBoxGame from "@/components/BlindBoxGame";
 import HeroRewardPanel from "@/components/landing/HeroRewardPanel";
 import MobileFixedCta from "@/components/landing/MobileFixedCta";
+import HeroIphoneShowcase from "@/components/landing/HeroIphoneShowcase";
 import { useI18n } from "@/lib/i18n-context";
 import {
   formatPublicWinnerLine,
@@ -13,6 +14,10 @@ import {
   type PublicWinnerRow,
 } from "@/lib/blindbox-public";
 import { isPoolVisiblePrize, isDrawablePrize } from "@/lib/blindbox-prize-utils";
+import {
+  buildPoolHighlightChips,
+  resolveGrandPrizeDisplay,
+} from "@/lib/grand-prize-display";
 import { displayPrizeName } from "@/lib/prize-display";
 import { getPrizeImageUrl } from "@/lib/prize-images";
 import PrizeVisual from "@/components/PrizeVisual";
@@ -135,6 +140,10 @@ export default function BlindBoxLanding({
   const mob = l.mobile;
   const a = m.auth;
   const checkout = useBlindBoxCheckout(config.price);
+  const grandPrize = useMemo(
+    () => resolveGrandPrizeDisplay(config, prizes),
+    [config, prizes],
+  );
 
   const drawWeight = prizes.filter(isDrawablePrize).reduce((s, p) => s + p.weight, 0);
   const visiblePrizes = useMemo(
@@ -190,28 +199,10 @@ export default function BlindBoxLanding({
     return [];
   }, [publicWinners, config.winnersDemoMode, config.demoWinners, locale, renderedAt]);
 
-  const floatingChips = useMemo(() => {
-    const legendary = prizes.find((p) => p.tier === "legendary" && isPoolVisiblePrize(p));
-    const epic = prizes.find((p) => p.tier === "epic" && isPoolVisiblePrize(p));
-    const rare = prizes.find((p) => p.tier === "rare" && isPoolVisiblePrize(p));
-    return [
-      {
-        label: legendary ? displayPrizeName(legendary, locale) : "iPhone 17 Pro Max",
-        emoji: legendary?.emoji ?? "📱",
-        className: "top-2 right-2",
-      },
-      {
-        label: epic ? displayPrizeName(epic, locale) : "MacBook Pro",
-        emoji: epic?.emoji ?? "💻",
-        className: "bottom-4 left-2",
-      },
-      {
-        label: rare ? displayPrizeName(rare, locale) : "RTX 4090",
-        emoji: rare?.emoji ?? "🎮",
-        className: "top-[18%] -right-2",
-      },
-    ];
-  }, [prizes, locale]);
+  const floatingChips = useMemo(
+    () => buildPoolHighlightChips(prizes, locale, grandPrize.prizeKey),
+    [prizes, locale, grandPrize.prizeKey],
+  );
 
   const steps = [
     injectConfigPrice(b.step1, config.price, locale),
@@ -274,7 +265,11 @@ export default function BlindBoxLanding({
               {config.heroSubtitle ?? mob.subtitle}
             </p>
 
-            <div className="mt-5">
+            <div className="mt-5 hidden max-w-[280px] lg:block">
+              <HeroIphoneShowcase alt={mob.titleLine2} />
+            </div>
+
+            <div className="mt-5 lg:mt-4">
               <BlindBoxOpenPrice fullPrice={config.price} size="hero" />
               <span className="mt-0.5 block text-[14px] text-white/55">{l.perOpen}</span>
             </div>
@@ -328,9 +323,10 @@ export default function BlindBoxLanding({
 
           {/* 右侧：大奖 + 数据 + 实时名单 */}
           <HeroRewardPanel
-            grandPrizeName={config.grandPrizeName}
-            grandPrizeValue={config.grandPrizeValue}
-            grandPrizeImageUrl={config.grandPrizeImageUrl}
+            grandPrizeName={grandPrize.name}
+            grandPrizeValue={grandPrize.value}
+            grandPrizeImageUrl={grandPrize.imageUrl}
+            prizeEmoji={grandPrize.emoji}
             grandPrizeStatus={stats?.grandPrizeStatus ?? "available"}
             grandStatusLabel={grandStatusLabel}
             statsCards={statsCards}
@@ -486,7 +482,7 @@ export default function BlindBoxLanding({
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-black">{l.ctaTitle}</h2>
           <p className="mt-3 text-white/60">
-            {config.grandPrizeName} · {config.grandPrizeValue}
+            {grandPrize.name} · {grandPrize.value}
           </p>
           <a
             href="#draw"

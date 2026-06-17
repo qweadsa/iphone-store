@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n-context";
 import { formatMarketPrice } from "@/lib/locale-resolve";
 import type { BlindBoxPrize } from "@/types/blindbox";
 import { isGrandPrize, isDrawablePrize } from "@/lib/blindbox-prize-utils";
+import { resolveGrandPrizeDisplay } from "@/lib/grand-prize-display";
 import { calcProbability } from "@/lib/probability";
 
 type Config = {
@@ -27,6 +28,7 @@ export default function BlindBoxSection({ config, prizes }: Props) {
   const b = m.blindBox;
   const drawWeight = prizes.filter(isDrawablePrize).reduce((s, p) => s + p.weight, 0);
   const grandPrize = prizes.find(isGrandPrize);
+  const grandDisplay = resolveGrandPrizeDisplay(config, prizes);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#1a0a2e] via-[#16082a] to-[#0d1b3e] py-20 text-white">
@@ -59,7 +61,7 @@ export default function BlindBoxSection({ config, prizes }: Props) {
 
             {grandPrize && (
               <p className="mt-3 text-sm text-amber-300/80">
-                🏆 {config.grandPrizeName} — {calcProbability(grandPrize.weight, drawWeight)} chance
+                🏆 {grandDisplay.name} — {calcProbability(grandPrize.weight, drawWeight)} chance
               </p>
             )}
 
@@ -83,21 +85,22 @@ export default function BlindBoxSection({ config, prizes }: Props) {
             <div className="relative">
               <div className="blindbox-float absolute -inset-4 rounded-3xl bg-gradient-to-br from-amber-400/30 to-purple-600/30 blur-xl" />
               <div className="blindbox-shake relative flex h-72 w-72 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 shadow-2xl md:h-80 md:w-80">
-                {config.grandPrizeImageUrl ? (
+                {grandDisplay.imageUrl ? (
                   <Image
-                    src={config.grandPrizeImageUrl}
-                    alt={config.grandPrizeName}
+                    src={grandDisplay.imageUrl}
+                    alt={grandDisplay.name}
                     fill
-                    className="object-cover opacity-90"
+                    className="object-contain p-4 opacity-95"
+                    unoptimized
                   />
                 ) : (
                   <>
                     <div className="absolute inset-3 rounded-2xl border-2 border-dashed border-white/30" />
                     <div className="text-center">
-                      <span className="text-7xl">🎁</span>
+                      <span className="text-7xl">{grandDisplay.emoji}</span>
                       <p className="mt-3 text-lg font-bold">?</p>
                       <p className="mt-1 text-xs text-white/80">
-                        {config.grandPrizeName}
+                        {grandDisplay.name}
                       </p>
                     </div>
                   </>
