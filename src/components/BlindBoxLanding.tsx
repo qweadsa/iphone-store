@@ -267,7 +267,7 @@ export default function BlindBoxLanding({
             </h1>
 
             <p className="mt-3 max-w-lg text-[15px] leading-[1.55] text-[rgba(245,245,247,0.72)]">
-              {config.heroSubtitle ?? mob.subtitle}
+              {injectConfigPrice(config.heroSubtitle ?? mob.subtitle, config.price, locale)}
             </p>
 
             <div className="mt-5 lg:mt-4">
@@ -345,7 +345,9 @@ export default function BlindBoxLanding({
       >
         <div className="mx-auto max-w-3xl px-4 text-center md:px-6">
           <h2 className="text-[26px] font-black md:text-4xl">{config.heroTitle ?? b.pageTitle}</h2>
-          <p className="mt-2 text-[14px] text-white/55">{config.heroSubtitle ?? b.pageSubtitle}</p>
+          <p className="mt-2 text-[14px] text-white/55">
+            {injectConfigPrice(config.heroSubtitle ?? b.pageSubtitle, config.price, locale)}
+          </p>
         </div>
         <BlindBoxGame prizes={prizes} config={config} theme="dark" />
       </section>

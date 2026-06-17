@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n-context";
-import { formatMarketPrice } from "@/lib/locale-resolve";
+import { formatMarketPrice, injectConfigPrice } from "@/lib/locale-resolve";
 import type { BlindBoxPrize } from "@/types/blindbox";
 import { isGrandPrize, isDrawablePrize } from "@/lib/blindbox-prize-utils";
 import { resolveGrandPrizeDisplay } from "@/lib/grand-prize-display";
@@ -48,7 +48,7 @@ export default function BlindBoxSection({ config, prizes }: Props) {
               {config.heroTitle ?? b.headline}
             </h2>
             <p className="mt-4 text-lg text-white/70">
-              {config.heroSubtitle ?? b.subtitle}
+              {injectConfigPrice(config.heroSubtitle ?? b.subtitle, config.price, locale)}
             </p>
             <p className="mt-2 text-sm text-white/50">{b.desc}</p>
 
