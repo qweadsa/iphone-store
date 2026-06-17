@@ -8,8 +8,11 @@ import {
   HERO_SHOWCASE_INTERVAL_MS,
 } from "@/lib/hero-iphone-cutouts";
 import {
+  getHeroMobileWebpUrl,
+  getHeroWebpUrl,
   HERO_IMAGE_DISPLAY_HEIGHT,
   HERO_IMAGE_DISPLAY_WIDTH,
+  isLocalRasterPng,
 } from "@/lib/hero-image-url";
 
 type Props = {
@@ -17,9 +20,16 @@ type Props = {
   frames?: HeroShowcaseFrame[];
 };
 
-function initialLoadedIndices(slideCount: number, mobile: boolean): Set<number> {
-  if (slideCount <= 1) return new Set([0]);
-  return new Set(mobile ? [0] : [0, 1]);
+function prefetchSlide(src: string) {
+  if (typeof window === "undefined") return;
+  const url = isLocalRasterPng(src)
+    ? window.matchMedia("(max-width: 768px)").matches
+      ? getHeroMobileWebpUrl(src)
+      : getHeroWebpUrl(src)
+    : src;
+  const img = new window.Image();
+  img.decoding = "async";
+  img.src = url;
 }
 
 export default function HeroIphoneShowcase({ alt, frames = HERO_SHOWCASE_FRAMES }: Props) {
@@ -29,7 +39,6 @@ export default function HeroIphoneShowcase({ alt, frames = HERO_SHOWCASE_FRAMES 
     [slides],
   );
   const [activeIndex, setActiveIndex] = useState(0);
-  const [loadedIndices, setLoadedIndices] = useState<Set<number>>(() => new Set([0]));
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -41,20 +50,20 @@ export default function HeroIphoneShowcase({ alt, frames = HERO_SHOWCASE_FRAMES 
 
   useEffect(() => {
     setActiveIndex(0);
-    const mobile = window.matchMedia("(max-width: 768px)").matches;
-    setLoadedIndices(initialLoadedIndices(slides.length, mobile));
-  }, [slideKey, slides.length]);
+  }, [slideKey]);
+
+  // 后台预加载其余轮播图，切换时不卡顿，DOM 仍保留全部图片
+  useEffect(() => {
+    slides.forEach((frame, index) => {
+      if (index === 0) return;
+      prefetchSlide(frame.src);
+    });
+  }, [slides]);
 
   useEffect(() => {
     const next = (activeIndex + 1) % slides.length;
-    setLoadedIndices((prev) => {
-      if (prev.has(activeIndex) && prev.has(next)) return prev;
-      const copy = new Set(prev);
-      copy.add(activeIndex);
-      copy.add(next);
-      return copy;
-    });
-  }, [activeIndex, slides.length]);
+    prefetchSlide(slides[next]?.src ?? "");
+  }, [activeIndex, slides]);
 
   return (
     <div className="hero-phone-stage" role="img" aria-label={alt}>
@@ -73,18 +82,16 @@ export default function HeroIphoneShowcase({ alt, frames = HERO_SHOWCASE_FRAMES 
                   index === activeIndex ? " opacity-100" : " opacity-0"
                 }${frame.wide ? " hero-phone-frame-wide" : ""}`}
               >
-                {loadedIndices.has(index) ? (
-                  <OptimizedRasterImage
-                    src={frame.src}
-                    alt={`${alt} — ${frame.label}`}
-                    width={HERO_IMAGE_DISPLAY_WIDTH}
-                    height={HERO_IMAGE_DISPLAY_HEIGHT}
-                    className="hero-phone-img"
-                    loading={index === 0 ? "eager" : "lazy"}
-                    fetchPriority={index === 0 ? "high" : "low"}
-                    decoding="async"
-                  />
-                ) : null}
+                <OptimizedRasterImage
+                  src={frame.src}
+                  alt={`${alt} — ${frame.label}`}
+                  width={HERO_IMAGE_DISPLAY_WIDTH}
+                  height={HERO_IMAGE_DISPLAY_HEIGHT}
+                  className="hero-phone-img"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  decoding="async"
+                />
               </div>
             ))}
           </div>

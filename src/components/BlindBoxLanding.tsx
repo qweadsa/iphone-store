@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import DeferredBlindBoxGame from "@/components/DeferredBlindBoxGame";
+import BlindBoxGame from "@/components/BlindBoxGame";
 import HeroRewardPanel from "@/components/landing/HeroRewardPanel";
 import MobileFixedCta from "@/components/landing/MobileFixedCta";
 import { useI18n } from "@/lib/i18n-context";
@@ -349,7 +349,7 @@ export default function BlindBoxLanding({
             {injectConfigPrice(config.heroSubtitle ?? b.pageSubtitle, config.price, locale)}
           </p>
         </div>
-        <DeferredBlindBoxGame prizes={prizes} config={config} />
+        <BlindBoxGame prizes={prizes} config={config} theme="dark" />
       </section>
 
       {/* ── 奖池 ── */}

@@ -227,7 +227,7 @@ body {
 
 @keyframes reel-idle-scroll {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(-33.333%); }
 }
 
 .reel-idle-scroll {
@@ -386,28 +386,6 @@ body {
   filter: drop-shadow(0 24px 36px rgba(0, 0, 0, 0.55));
   user-select: none;
   pointer-events: none;
-}
-
-@media (max-width: 768px) {
-  .hero-phone-tilt,
-  .hero-phone-sway {
-    animation: none;
-  }
-
-  .hero-phone-sway {
-    transform: rotateY(-6deg) rotateX(2deg);
-  }
-
-  .hero-phone-ambient,
-  .hero-phone-ring {
-    animation: none;
-  }
-
-  #prizes,
-  #draw {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 480px;
-  }
 }
 
 @media (min-width: 1024px) {
