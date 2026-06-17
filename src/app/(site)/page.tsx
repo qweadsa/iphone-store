@@ -17,7 +17,10 @@ import {
   market,
 } from "@/lib/market";
 import { formatMarketPrice } from "@/lib/locale-resolve";
+import { resolveHeroShowcaseFrames } from "@/lib/hero-showcase";
+import { getHeroWebpUrl, heroSupportsWebp } from "@/lib/hero-image-url";
 import { unstable_noStore as noStore } from "next/cache";
+import { preload } from "react-dom";
 import type { Metadata } from "next";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://iphone-store.com";
@@ -66,6 +69,16 @@ export default async function Page() {
   ]);
   const publicWinners =
     blindBoxConfig.winnersDemoMode === false ? await getPublicWinnerRows() : [];
+
+  const heroFrames = resolveHeroShowcaseFrames(blindBoxConfig.heroShowcase);
+  const firstHeroSrc = heroFrames[0]?.src;
+  if (firstHeroSrc) {
+    if (heroSupportsWebp(firstHeroSrc)) {
+      preload(getHeroWebpUrl(firstHeroSrc), { as: "image", fetchPriority: "high" });
+    } else {
+      preload(firstHeroSrc, { as: "image", fetchPriority: "high" });
+    }
+  }
 
   const jsonLd = [
     {

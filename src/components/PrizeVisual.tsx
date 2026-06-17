@@ -39,6 +39,8 @@ export default function PrizeVisual({
             alt={alt}
             width={s.img}
             height={s.img}
+            loading="lazy"
+            decoding="async"
             className={`h-full w-full object-contain p-1 ${isSvg ? "" : "prize-cutout-img drop-shadow-[0_6px_14px_rgba(0,0,0,0.45)]"}`}
           />
         ) : (
