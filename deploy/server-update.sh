@@ -78,6 +78,28 @@ systemctl restart iphone-store
 sleep 2
 systemctl status iphone-store --no-pager || true
 
+echo "==> nginx (域名访问 teumu.online)"
+if command -v nginx >/dev/null; then
+  if [ -f /etc/letsencrypt/live/teumu.online/fullchain.pem ]; then
+    cp deploy/nginx-teumu.online.conf /etc/nginx/sites-available/teumu.online
+  else
+    cp deploy/nginx-teumu.online-http.conf /etc/nginx/sites-available/teumu.online
+  fi
+  ln -sf /etc/nginx/sites-available/teumu.online /etc/nginx/sites-enabled/teumu.online
+  rm -f /etc/nginx/sites-enabled/default
+  if nginx -t; then
+    systemctl enable nginx
+    systemctl restart nginx
+  else
+    echo "    Nginx 配置有误，改用 HTTP 配置重试..."
+    cp deploy/nginx-teumu.online-http.conf /etc/nginx/sites-available/teumu.online
+    nginx -t && systemctl restart nginx
+  fi
+else
+  echo "    未安装 Nginx，执行: bash deploy/setup-nginx.sh"
+fi
+
 echo "==> done"
 echo "    Admin login: https://teumu.online/admin/teumu-mgmt-9284"
-curl -s -o /dev/null -w "HTTP %{http_code}\n" http://127.0.0.1:3000 || true
+curl -s -o /dev/null -w "app :3000 => HTTP %{http_code}\n" http://127.0.0.1:3000 || true
+curl -s -o /dev/null -w "nginx :80  => HTTP %{http_code}\n" -H "Host: teumu.online" http://127.0.0.1/ || true
