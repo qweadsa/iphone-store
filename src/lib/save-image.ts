@@ -34,8 +34,12 @@ export async function saveImageToPublic(
   let outputName = filename;
 
   if (options.removeLightBackground && shouldRemoveLightBackground(ext)) {
-    output = Buffer.from(await removeLightBackgroundFromBuffer(bytes));
-    outputName = filename.replace(/\.[^.]+$/, ".png");
+    try {
+      output = Buffer.from(await removeLightBackgroundFromBuffer(bytes));
+      outputName = filename.replace(/\.[^.]+$/, ".png");
+    } catch {
+      /* sharp 失败时保存原图，避免整次上传失败 */
+    }
   }
 
   await writeFile(join(dir, outputName), output);

@@ -78,6 +78,11 @@ systemctl restart iphone-store
 sleep 2
 systemctl status iphone-store --no-pager || true
 
+echo "==> uploads 目录权限"
+mkdir -p public/uploads public/payments
+chown -R www-data:www-data public/uploads public/payments
+chmod -R 775 public/uploads public/payments
+
 echo "==> nginx (域名访问 teumu.online)"
 if command -v nginx >/dev/null; then
   if [ -f /etc/letsencrypt/live/teumu.online/fullchain.pem ]; then
