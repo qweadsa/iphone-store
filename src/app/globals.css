@@ -280,61 +280,6 @@ body {
   }
 }
 
-@keyframes hero-phone-frame-1 {
-  0%,
-  22% {
-    opacity: 1;
-  }
-  25%,
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes hero-phone-frame-2 {
-  0%,
-  22% {
-    opacity: 0;
-  }
-  25%,
-  47% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes hero-phone-frame-3 {
-  0%,
-  47% {
-    opacity: 0;
-  }
-  50%,
-  72% {
-    opacity: 1;
-  }
-  75%,
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes hero-phone-frame-4 {
-  0%,
-  72% {
-    opacity: 0;
-  }
-  75%,
-  97% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
 .hero-phone-stage {
   position: relative;
   display: flex;
@@ -410,7 +355,7 @@ body {
 
 .hero-phone-sway {
   transform-style: preserve-3d;
-  animation: hero-phone-sway 16s ease-in-out infinite;
+  animation: hero-phone-sway 12s ease-in-out infinite;
 }
 
 .hero-phone-stack {
@@ -427,23 +372,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-}
-
-.hero-phone-frame-1 {
-  animation: hero-phone-frame-1 16s ease-in-out infinite;
-}
-
-.hero-phone-frame-2 {
-  animation: hero-phone-frame-2 16s ease-in-out infinite;
-}
-
-.hero-phone-frame-3 {
-  animation: hero-phone-frame-3 16s ease-in-out infinite;
-}
-
-.hero-phone-frame-4 {
-  animation: hero-phone-frame-4 16s ease-in-out infinite;
 }
 
 .hero-phone-frame-wide .hero-phone-img {
@@ -475,20 +403,11 @@ body {
   .hero-phone-tilt,
   .hero-phone-sway,
   .hero-phone-ambient,
-  .hero-phone-ring,
-  .hero-phone-frame {
+  .hero-phone-ring {
     animation: none;
   }
 
   .hero-phone-sway {
     transform: rotateY(-8deg) rotateX(4deg);
-  }
-
-  .hero-phone-frame-2 {
-    opacity: 0;
-  }
-
-  .hero-phone-frame-1 {
-    opacity: 1;
   }
 }

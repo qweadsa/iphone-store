@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
       },
     });
 
+    revalidatePath("/");
     return NextResponse.json(prize, { status: 201 });
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHORIZED") {

@@ -1,13 +1,26 @@
 "use client";
 
-import Image from "next/image";
-import { HERO_CUTOUT_FRAMES } from "@/lib/hero-iphone-cutouts";
+import { useEffect, useState } from "react";
+import {
+  HERO_SHOWCASE_FRAMES,
+  HERO_SHOWCASE_INTERVAL_MS,
+} from "@/lib/hero-iphone-cutouts";
 
 type Props = {
   alt: string;
 };
 
 export default function HeroIphoneShowcase({ alt }: Props) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (HERO_SHOWCASE_FRAMES.length <= 1) return;
+    const id = window.setInterval(() => {
+      setActiveIndex((i) => (i + 1) % HERO_SHOWCASE_FRAMES.length);
+    }, HERO_SHOWCASE_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, []);
+
   return (
     <div className="hero-phone-stage" role="img" aria-label={alt}>
       <div className="hero-phone-ambient" aria-hidden />
@@ -18,19 +31,22 @@ export default function HeroIphoneShowcase({ alt }: Props) {
       <div className="hero-phone-tilt">
         <div className="hero-phone-sway">
           <div className="hero-phone-stack">
-            {HERO_CUTOUT_FRAMES.map((frame, index) => (
+            {HERO_SHOWCASE_FRAMES.map((frame, index) => (
               <div
                 key={frame.src}
-                className={`hero-phone-frame hero-phone-frame-${index + 1}${"wide" in frame && frame.wide ? " hero-phone-frame-wide" : ""}`}
+                className={`hero-phone-frame transition-opacity duration-500 ease-in-out${
+                  index === activeIndex ? " opacity-100" : " opacity-0"
+                }${frame.wide ? " hero-phone-frame-wide" : ""}`}
               >
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={frame.src}
                   alt={`${alt} — ${frame.label}`}
                   width={560}
                   height={720}
                   className="hero-phone-img"
-                  priority={index <= 1}
-                  unoptimized
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
                 />
               </div>
             ))}

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { adminApiErrorMessage } from "@/lib/admin-api-error";
@@ -33,6 +34,7 @@ export async function PUT(req: Request, { params }: Ctx) {
         sortOrder: body.sortOrder ?? 0,
       },
     });
+    revalidatePath("/");
     return NextResponse.json(prize);
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHORIZED") {
@@ -50,6 +52,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     await requireAdmin();
     const { id } = await params;
     await prisma.blindBoxPrize.delete({ where: { id: Number(id) } });
+    revalidatePath("/");
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHORIZED") {
