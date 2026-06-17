@@ -35,8 +35,9 @@ with open(path, "w", encoding="utf-8") as f:
 PY
 }
 
-echo "==> git pull"
-git pull origin main
+echo "==> git fetch + reset (与 GitHub 完全一致，避免 unrelated histories 报错)"
+git fetch origin main
+git reset --hard origin/main
 
 echo "==> sync .env (admin login)"
 ENV_FILE=".env"
