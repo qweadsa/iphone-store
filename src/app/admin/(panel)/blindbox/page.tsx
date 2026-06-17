@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import HeroShowcaseEditor from "@/components/admin/HeroShowcaseEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
+import type { HeroShowcaseEntry } from "@/lib/hero-showcase";
 import { getPrizeRealOdds } from "@/lib/probability";
 import {
   DEFAULT_BLIND_BOX_PRICE,
@@ -37,6 +39,7 @@ type Config = {
   heroTitle: string | null;
   heroSubtitle: string | null;
   grandPrizeImageUrl: string | null;
+  heroShowcase?: HeroShowcaseEntry[];
   seoTitle: string | null;
   seoDescription: string | null;
   dailyLimit: number;
@@ -93,6 +96,7 @@ export default function BlindBoxAdminPage() {
       .then((d) => {
         setConfig({
           ...d.config,
+          heroShowcase: d.config?.heroShowcase ?? [],
           demoWinners: d.config?.demoWinners?.length
             ? d.config.demoWinners
             : DEFAULT_DEMO_WINNERS,
@@ -478,11 +482,9 @@ export default function BlindBoxAdminPage() {
               className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
             />
           </label>
-          <ImageUpload
-            label="首页主图（右侧大奖展示图）"
-            hint="建议 512×512 以上。上传成功后务必点「保存盲盒设置」。"
-            value={config.grandPrizeImageUrl ?? ""}
-            onChange={(url) => setConfig({ ...config, grandPrizeImageUrl: url || null })}
+          <HeroShowcaseEditor
+            value={config.heroShowcase ?? []}
+            onChange={(heroShowcase) => setConfig({ ...config, heroShowcase })}
           />
           <button
             onClick={saveConfig}

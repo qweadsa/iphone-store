@@ -4,6 +4,8 @@ import HeroGrandPrizeCard from "@/components/landing/HeroGrandPrizeCard";
 import LiveWinnerFeed, { type LiveWinnerItem } from "@/components/landing/LiveWinnerFeed";
 import type { GrandPrizeStatus } from "@/lib/blindbox-public";
 
+import type { HeroShowcaseFrame } from "@/lib/hero-iphone-cutouts";
+
 type StatCard = {
   n: string;
   label: string;
@@ -18,6 +20,7 @@ type Props = {
   statsCards: StatCard[];
   winnerItems: LiveWinnerItem[];
   floatingChips: { label: string; emoji: string; className: string }[];
+  showcaseFrames?: HeroShowcaseFrame[];
   showStats?: boolean;
   statsDesktopOnly?: boolean;
   labels: {
@@ -38,6 +41,7 @@ export default function HeroRewardPanel({
   statsCards,
   winnerItems,
   floatingChips,
+  showcaseFrames,
   showStats = true,
   statsDesktopOnly = false,
   labels,
@@ -50,6 +54,7 @@ export default function HeroRewardPanel({
         status={grandPrizeStatus}
         statusLabel={grandStatusLabel}
         floatingChips={floatingChips}
+        showcaseFrames={showcaseFrames}
         labels={{
           eyebrow: labels.grandEyebrow,
           subtitle: labels.grandSubtitle,

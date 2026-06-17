@@ -17,6 +17,7 @@ import {
   buildPoolHighlightChips,
   resolveGrandPrizeDisplay,
 } from "@/lib/grand-prize-display";
+import { resolveHeroShowcaseFrames } from "@/lib/hero-showcase";
 import { displayPrizeName } from "@/lib/prize-display";
 import { getPrizeImageUrl } from "@/lib/prize-images";
 import PrizeVisual from "@/components/PrizeVisual";
@@ -106,6 +107,7 @@ type Config = {
   heroTitle?: string;
   heroSubtitle?: string;
   grandPrizeImageUrl?: string | null;
+  heroShowcase?: { src: string; label?: string; wide?: boolean }[];
   winnersDemoMode?: boolean;
   demoWinners?: DemoWinnerEntry[];
 };
@@ -142,6 +144,10 @@ export default function BlindBoxLanding({
   const grandPrize = useMemo(
     () => resolveGrandPrizeDisplay(config, prizes),
     [config, prizes],
+  );
+  const showcaseFrames = useMemo(
+    () => resolveHeroShowcaseFrames(config.heroShowcase),
+    [config.heroShowcase],
   );
 
   const drawWeight = prizes.filter(isDrawablePrize).reduce((s, p) => s + p.weight, 0);
@@ -325,6 +331,7 @@ export default function BlindBoxLanding({
             statsCards={statsCards}
             winnerItems={winnerItems}
             floatingChips={floatingChips}
+            showcaseFrames={showcaseFrames}
             showStats
             statsDesktopOnly
             labels={panelLabels}

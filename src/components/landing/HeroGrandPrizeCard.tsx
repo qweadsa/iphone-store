@@ -1,4 +1,5 @@
 import HeroIphoneShowcase from "@/components/landing/HeroIphoneShowcase";
+import type { HeroShowcaseFrame } from "@/lib/hero-iphone-cutouts";
 import type { GrandPrizeStatus } from "@/lib/blindbox-public";
 
 type Props = {
@@ -6,6 +7,7 @@ type Props = {
   value: string;
   status: GrandPrizeStatus;
   statusLabel: string;
+  showcaseFrames?: HeroShowcaseFrame[];
   labels: {
     eyebrow: string;
     subtitle: string;
@@ -21,6 +23,7 @@ export default function HeroGrandPrizeCard({
   statusLabel,
   labels,
   floatingChips = [],
+  showcaseFrames,
 }: Props) {
   return (
     <div className="relative">
@@ -79,7 +82,7 @@ export default function HeroGrandPrizeCard({
               </div>
             ))}
 
-            <HeroIphoneShowcase alt={name} />
+            <HeroIphoneShowcase alt={name} frames={showcaseFrames} />
           </div>
         </div>
       </div>

@@ -57,6 +57,7 @@ model BlindBoxConfig {
   heroTitle          String? @map("hero_title") @db.VarChar(300)
   heroSubtitle       String? @map("hero_subtitle") @db.Text
   grandPrizeImageUrl String? @map("grand_prize_image_url") @db.VarChar(500)
+  heroShowcaseJson   Json?   @map("hero_showcase_json")
   seoTitle           String? @map("seo_title") @db.VarChar(300)
   seoDescription     String? @map("seo_description") @db.Text
   dailyLimit         Int     @default(0) @map("daily_limit")

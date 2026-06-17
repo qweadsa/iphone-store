@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS blind_box_config (
   hero_title              VARCHAR(300) DEFAULT NULL,
   hero_subtitle           TEXT DEFAULT NULL,
   grand_prize_image_url   VARCHAR(500) DEFAULT NULL,
+  hero_showcase_json      JSON DEFAULT NULL,
   seo_title               VARCHAR(300) DEFAULT NULL,
   seo_description         TEXT DEFAULT NULL,
   daily_limit             INT NOT NULL DEFAULT 0

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -15,6 +16,10 @@ import {
   serializeDemoWinners,
   type DemoWinnerEntry,
 } from "@/lib/demo-winners";
+import {
+  parseHeroShowcaseJson,
+  serializeHeroShowcase,
+} from "@/lib/hero-showcase";
 
 async function loadNormalizedConfig() {
   const row = await prisma.blindBoxConfig.findFirst({ where: { id: 1 } });
@@ -67,8 +72,9 @@ export async function GET() {
       loadNormalizedPrizes(),
     ]);
     const demoWinners = parseDemoWinners(config?.demoWinnersJson);
+    const heroShowcase = parseHeroShowcaseJson(config?.heroShowcaseJson);
     return NextResponse.json({
-      config: config ? { ...config, demoWinners } : null,
+      config: config ? { ...config, demoWinners, heroShowcase } : null,
       prizes,
     });
   } catch (e) {
@@ -100,6 +106,14 @@ export async function PUT(req: Request) {
     const demoWinners = serializeDemoWinners(
       parseDemoWinners(body.demoWinners as DemoWinnerEntry[] | undefined),
     );
+    const heroShowcase = serializeHeroShowcase(
+      parseHeroShowcaseJson(body.heroShowcase),
+    );
+    const heroShowcaseJson = heroShowcase.length ? heroShowcase : Prisma.DbNull;
+    const grandPrizeImageUrl =
+      body.grandPrizeImageUrl?.trim() ||
+      heroShowcase[0]?.src ||
+      null;
 
     const config = await prisma.blindBoxConfig.upsert({
       where: { id: 1 },
@@ -110,7 +124,8 @@ export async function PUT(req: Request) {
         grandPrizeValue: normalized.grandPrizeValue,
         heroTitle: normalized.heroTitle,
         heroSubtitle: normalized.heroSubtitle,
-        grandPrizeImageUrl: body.grandPrizeImageUrl,
+        grandPrizeImageUrl,
+        heroShowcaseJson,
         seoTitle: normalized.seoTitle,
         seoDescription: normalized.seoDescription,
         dailyLimit: body.dailyLimit ?? 0,
@@ -128,7 +143,8 @@ export async function PUT(req: Request) {
         grandPrizeValue: normalized.grandPrizeValue ?? DEFAULT_GRAND_PRIZE_VALUE,
         heroTitle: normalized.heroTitle,
         heroSubtitle: normalized.heroSubtitle,
-        grandPrizeImageUrl: body.grandPrizeImageUrl,
+        grandPrizeImageUrl,
+        heroShowcaseJson,
         seoTitle: normalized.seoTitle,
         seoDescription: normalized.seoDescription,
         dailyLimit: body.dailyLimit ?? 0,
@@ -144,6 +160,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({
       ...config,
       demoWinners: parseDemoWinners(config.demoWinnersJson),
+      heroShowcase: parseHeroShowcaseJson(config.heroShowcaseJson),
     });
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHORIZED") {

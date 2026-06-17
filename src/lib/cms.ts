@@ -8,7 +8,8 @@ import { mapDbPrize } from "@/lib/blindbox-prize-utils";
 import type { BlindBoxPrize } from "@/types/blindbox";
 import { normalizeCategory } from "@/lib/categories";
 import { normalizeBlindBoxConfig } from "@/lib/market";
-import { parseDemoWinners, type DemoWinnerEntry } from "@/lib/demo-winners";
+import { parseDemoWinners } from "@/lib/demo-winners";
+import { parseHeroShowcaseJson, type HeroShowcaseEntry } from "@/lib/hero-showcase";
 import { getProductImageUrl } from "@/lib/product-images";
 import type { Product } from "@/types/product";
 
@@ -149,6 +150,7 @@ export async function getBlindBoxConfig() {
             dailyLimit: r.dailyLimit,
             winnersDemoMode: r.winnersDemoMode ?? true,
             grandPrizeImageUrl: r.grandPrizeImageUrl,
+            heroShowcase: parseHeroShowcaseJson(r.heroShowcaseJson),
           }),
           statsDemoMode: r.statsDemoMode ?? true,
           displayPlayersToday: r.displayPlayersToday ?? 128,
@@ -163,6 +165,7 @@ export async function getBlindBoxConfig() {
   return {
     ...DEFAULT_BLIND_BOX_CONFIG,
     grandPrizeImageUrl: null as string | null,
+    heroShowcase: [] as HeroShowcaseEntry[],
     winnersDemoMode: false,
     demoWinners: parseDemoWinners(null),
   };
