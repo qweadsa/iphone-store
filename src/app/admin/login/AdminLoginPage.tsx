@@ -36,16 +36,17 @@ export default function AdminLoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0a0c10] p-8"
       >
-        <p className="text-2xl font-bold text-white">🎁 管理后台</p>
-        <p className="mt-1 text-sm text-white/50">登录后可上传图片、修改数据</p>
+        <p className="text-2xl font-bold text-white">管理后台</p>
+        <p className="mt-1 text-sm text-white/50">仅限授权管理员登录</p>
 
         <label className="mt-8 block text-sm text-white/70">管理员密码</label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
           className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-amber-500"
-          placeholder="默认: admin123"
+          placeholder="请输入密码"
           required
         />
 
@@ -60,7 +61,7 @@ export default function AdminLoginPage() {
         </button>
 
         <p className="mt-4 text-center text-xs text-white/30">
-          默认密码 admin123，可在 .env.local 修改 ADMIN_PASSWORD
+          连续输错 5 次将锁定 15 分钟
         </p>
       </form>
     </div>

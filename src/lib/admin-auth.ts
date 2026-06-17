@@ -5,8 +5,14 @@ import {
   parseSessionToken,
 } from "@/lib/session-token";
 
+export {
+  getAdminLoginPath,
+  getAdminLoginSlug,
+  isAdminLoginPathname,
+} from "@/lib/admin-login-path";
+
 export const ADMIN_COOKIE = "iphone_admin";
-const ADMIN_MAX_AGE = 60 * 60 * 24 * 7;
+const ADMIN_MAX_AGE = 60 * 60 * 8; // 8 小时，降低被盗用风险
 
 export function getAdminPassword(): string {
   return process.env.ADMIN_PASSWORD ?? "admin123";

@@ -17,8 +17,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router = useRouter();
 
   async function logout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin/login");
+    const res = await fetch("/api/admin/logout", { method: "POST" });
+    const data = (await res.json().catch(() => ({}))) as { loginPath?: string };
+    router.push(data.loginPath ?? "/admin/login");
     router.refresh();
   }
 

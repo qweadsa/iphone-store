@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADMIN_COOKIE, verifyAdminCookieValue } from "@/lib/admin-auth";
+import {
+  ADMIN_COOKIE,
+  getAdminLoginPath,
+  getAdminLoginSlug,
+  isAdminLoginPathname,
+  verifyAdminCookieValue,
+} from "@/lib/admin-auth";
 import { isProduction } from "@/lib/session-token";
 
 function withSecurityHeaders(res: NextResponse): NextResponse {
@@ -43,8 +49,9 @@ export async function middleware(request: NextRequest) {
 
   const adminToken = request.cookies.get(ADMIN_COOKIE)?.value;
   const loggedIn = await verifyAdminCookieValue(adminToken);
+  const loginPath = getAdminLoginPath();
 
-  if (pathname === "/admin/login") {
+  if (isAdminLoginPathname(pathname)) {
     if (loggedIn) {
       return withSecurityHeaders(
         NextResponse.redirect(new URL("/admin", request.url)),
@@ -53,9 +60,14 @@ export async function middleware(request: NextRequest) {
     return withSecurityHeaders(NextResponse.next());
   }
 
+  // 配置了私密路径后，关闭公开的 /admin/login
+  if (pathname === "/admin/login" && isProduction() && getAdminLoginSlug()) {
+    return withSecurityHeaders(new NextResponse("Not Found", { status: 404 }));
+  }
+
   if (!loggedIn) {
     return withSecurityHeaders(
-      NextResponse.redirect(new URL("/admin/login", request.url)),
+      NextResponse.redirect(new URL(loginPath, request.url)),
     );
   }
 
