@@ -1,0 +1,6 @@
+@echo off
+cd /d "%~dp0"
+echo Cleaning Next.js cache...
+if exist .next rmdir /s /q .next
+echo Starting dev server...
+npm run dev

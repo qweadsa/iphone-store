@@ -1,0 +1,68 @@
+import type { BlindBoxPrize, FulfillmentType, ReelTier } from "@/types/blindbox";
+
+export function mapDbPrize(r: {
+  id: number;
+  prizeType: string;
+  name: string;
+  subtitle?: string | null;
+  tier?: string | null;
+  fulfillmentType?: string | null;
+  weight: number;
+  displayOdds?: string | null;
+  emoji: string;
+  imageUrl?: string | null;
+  drawable?: boolean | null;
+  showInPool?: boolean | null;
+  active?: boolean | null;
+  sortOrder?: number | null;
+}): BlindBoxPrize {
+  const tier = (r.tier ?? "rare") as ReelTier;
+  const fulfillmentType = (r.fulfillmentType ?? inferFulfillment(r.prizeType)) as FulfillmentType;
+  return {
+    id: r.id,
+    key: r.prizeType,
+    name: r.name,
+    subtitle: r.subtitle,
+    tier,
+    fulfillmentType,
+    weight: r.weight,
+    displayOdds: r.displayOdds ?? null,
+    emoji: r.emoji,
+    imageUrl: r.imageUrl,
+    drawable: r.drawable ?? true,
+    showInPool: r.showInPool ?? true,
+    active: r.active ?? true,
+    sortOrder: r.sortOrder ?? 0,
+  };
+}
+
+function inferFulfillment(prizeType: string): FulfillmentType {
+  if (prizeType === "grand") return "grand";
+  if (prizeType === "credit") return "credit";
+  if (prizeType === "case") return "case";
+  if (prizeType === "coupon") return "coupon";
+  if (prizeType === "retry") return "retry";
+  return "none";
+}
+
+export function isDrawablePrize(prize: Pick<BlindBoxPrize, "active" | "drawable" | "weight">): boolean {
+  return prize.active !== false && prize.drawable !== false && prize.weight > 0;
+}
+
+export function isPoolVisiblePrize(
+  prize: Pick<BlindBoxPrize, "active" | "showInPool" | "fulfillmentType">,
+): boolean {
+  return prize.active !== false && prize.showInPool !== false && prize.fulfillmentType !== "retry";
+}
+
+export function isReelVisiblePrize(
+  prize: Pick<BlindBoxPrize, "active" | "fulfillmentType">,
+): boolean {
+  return prize.active !== false && prize.fulfillmentType !== "retry";
+}
+
+export function isGrandPrize(
+  prize: Pick<BlindBoxPrize, "tier" | "fulfillmentType">,
+): boolean {
+  return prize.tier === "legendary" || prize.fulfillmentType === "grand";
+}

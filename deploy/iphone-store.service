@@ -1,0 +1,18 @@
+[Unit]
+Description=iPhone Store (Next.js)
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/iphone-store
+Environment=NODE_ENV=production
+EnvironmentFile=/var/www/iphone-store/.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+{
+  "market": "MY",
+  "country": "Malaysia",
+  "defaultLocale": "ms",
+  "currency": "MYR",
+  "currencySymbol": "RM",
+  "note": "马来西亚本地版 — 默认 Bahasa Melayu，收款面向本地银行与电子钱包。"
+}

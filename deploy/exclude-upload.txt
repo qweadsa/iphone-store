@@ -1,0 +1,18 @@
+# 部署打包时排除（不要上传到服务器）
+node_modules/
+.next/
+.git/
+out/
+build/
+coverage/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+.cursor/
+terminals/
+
+# 本地开发脚本可选不上传
+RESTORE-*.bat

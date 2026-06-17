@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id             Int      @id @default(autoincrement())
+  slug           String   @unique @db.VarChar(100)
+  name           String   @db.VarChar(200)
+  tagline        String   @default("") @db.VarChar(500)
+  description    String   @db.Text
+  category       String   @db.VarChar(20)
+  badge          String?  @db.VarChar(20)
+  imageUrl       String?  @db.VarChar(500)
+  storageOptions Json
+  colors         Json
+  features       Json
+  seoTitle       String?  @db.VarChar(300)
+  seoDescription String?  @db.Text
+  active         Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("products")
+}
+
+model BlindBoxPrize {
+  id              Int     @id @default(autoincrement())
+  name            String  @db.VarChar(200)
+  prizeType       String  @map("prize_type") @db.VarChar(50)
+  subtitle        String? @db.VarChar(200)
+  tier            String  @default("rare") @db.VarChar(20)
+  fulfillmentType String  @default("none") @map("fulfillment_type") @db.VarChar(20)
+  weight          Int
+  displayOdds     String? @map("display_odds") @db.VarChar(30)
+  emoji           String  @default("🎁") @db.VarChar(10)
+  imageUrl        String? @map("image_url") @db.VarChar(500)
+  drawable        Boolean @default(true)
+  showInPool      Boolean @default(true) @map("show_in_pool")
+  active          Boolean @default(true)
+  sortOrder       Int     @default(0) @map("sort_order")
+
+  @@map("blind_box_prizes")
+}
+
+model BlindBoxConfig {
+  id                 Int     @id @default(1)
+  price              Float   @default(60)
+  enabled            Boolean @default(true)
+  grandPrizeName     String  @default("iPhone 17 Pro Max") @map("grand_prize_name") @db.VarChar(200)
+  grandPrizeValue    String  @default("$1,199") @map("grand_prize_value") @db.VarChar(50)
+  heroTitle          String? @map("hero_title") @db.VarChar(300)
+  heroSubtitle       String? @map("hero_subtitle") @db.Text
+  grandPrizeImageUrl String? @map("grand_prize_image_url") @db.VarChar(500)
+  seoTitle           String? @map("seo_title") @db.VarChar(300)
+  seoDescription     String? @map("seo_description") @db.Text
+  dailyLimit         Int     @default(0) @map("daily_limit")
+  winnersDemoMode    Boolean @default(true) @map("winners_demo_mode")
+  demoWinnersJson    Json?   @map("demo_winners_json")
+  statsDemoMode      Boolean @default(true) @map("stats_demo_mode")
+  displayPlayersToday Int    @default(128) @map("display_players_today")
+  displayWinnersToday Int    @default(42) @map("display_winners_today")
+
+  @@map("blind_box_config")
+}
+
+model SiteSettings {
+  id                 Int     @id @default(1)
+  homeSeoTitle       String? @map("home_seo_title") @db.VarChar(300)
+  homeSeoDescription String? @map("home_seo_description") @db.Text
+  paypalMe           String? @map("paypal_me") @db.VarChar(100)
+  paypalEmail        String? @map("paypal_email") @db.VarChar(200)
+  venmoUsername      String? @map("venmo_username") @db.VarChar(100)
+  zelleContact       String? @map("zelle_contact") @db.VarChar(200)
+  receiveLink        String? @map("receive_link") @db.VarChar(500)
+  receiveNote        String? @map("receive_note") @db.Text
+  paymentRequireAdminConfirm Boolean @default(true) @map("payment_require_admin_confirm")
+  supportTelegramUrl String? @map("support_telegram_url") @db.VarChar(500)
+
+  @@map("site_settings")
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  orderNumber  String      @unique @map("order_number") @db.VarChar(30)
+  customerName String      @map("customer_name") @db.VarChar(100)
+  email        String      @db.VarChar(200)
+  phone        String?     @db.VarChar(50)
+  address      String      @db.Text
+  city         String      @db.VarChar(100)
+  state        String      @db.VarChar(50)
+  zip          String      @db.VarChar(20)
+  total        Float
+  status       String      @default("pending") @db.VarChar(20)
+  paymentId    String?     @map("payment_id") @db.VarChar(40)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  items        OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        Int    @id @default(autoincrement())
+  orderId   Int    @map("order_id")
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String @map("product_id") @db.VarChar(100)
+  name      String @db.VarChar(200)
+  color     String @db.VarChar(100)
+  storage   String @db.VarChar(50)
+  price     Float
+  quantity  Int
+
+  @@map("order_items")
+}
+
+model User {
+  id           Int                 @id @default(autoincrement())
+  email        String              @unique @db.VarChar(200)
+  passwordHash String              @map("password_hash") @db.VarChar(200)
+  name         String              @db.VarChar(100)
+  balance      Float               @default(0)
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  payments     Payment[]
+  walletTxns   WalletTransaction[]
+  draws        BlindBoxDraw[]
+
+  @@map("users")
+}
+
+model Payment {
+  id         Int      @id @default(autoincrement())
+  paymentId  String   @unique @map("payment_id") @db.VarChar(40)
+  userId     Int?     @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  email      String?  @db.VarChar(200)
+  amount     Float
+  currency   String   @default("USD") @db.VarChar(3)
+  method     String   @default("pending") @db.VarChar(20)
+  provider   String   @default("internal") @db.VarChar(20)
+  status     String   @default("pending") @db.VarChar(20)
+  purpose    String   @db.VarChar(30)
+  metadata   Json?
+  externalId String?  @map("external_id") @db.VarChar(100)
+  payUrl     String?  @map("pay_url") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("payments")
+}
+
+model WalletTransaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Float
+  type        String   @db.VarChar(20)
+  paymentId   String?  @map("payment_id") @db.VarChar(40)
+  description String   @db.VarChar(300)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("wallet_transactions")
+}
+
+model BlindBoxDraw {
+  id                 Int       @id @default(autoincrement())
+  userId             Int?      @map("user_id")
+  user               User?     @relation(fields: [userId], references: [id])
+  email              String?   @db.VarChar(200)
+  prizeType          String    @map("prize_type") @db.VarChar(50)
+  prizeName          String    @map("prize_name") @db.VarChar(200)
+  paymentId          String    @map("payment_id") @db.VarChar(40)
+  fulfillmentType    String?   @map("fulfillment_type") @db.VarChar(20)
+  isVerified         Boolean   @default(true) @map("is_verified")
+  allowPublicDisplay Boolean   @default(true) @map("allow_public_display")
+  creditAmount       Float?    @map("credit_amount")
+  creditApplied      Boolean   @default(false) @map("credit_applied")
+  claimName          String?   @map("claim_name") @db.VarChar(100)
+  claimPhone         String?   @map("claim_phone") @db.VarChar(50)
+  claimEmail         String?   @map("claim_email") @db.VarChar(200)
+  claimAddress       String?   @map("claim_address") @db.Text
+  claimCity          String?   @map("claim_city") @db.VarChar(100)
+  claimState         String?   @map("claim_state") @db.VarChar(50)
+  claimZip           String?   @map("claim_zip") @db.VarChar(20)
+  claimedAt          DateTime? @map("claimed_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  @@map("blind_box_draws")
+}
