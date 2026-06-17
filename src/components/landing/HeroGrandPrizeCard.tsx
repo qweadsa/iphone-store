@@ -1,11 +1,9 @@
-import HeroGrandPrizeVisual from "@/components/landing/HeroGrandPrizeVisual";
+import HeroIphoneShowcase from "@/components/landing/HeroIphoneShowcase";
 import type { GrandPrizeStatus } from "@/lib/blindbox-public";
 
 type Props = {
   name: string;
   value: string;
-  imageUrl?: string | null;
-  emoji?: string;
   status: GrandPrizeStatus;
   statusLabel: string;
   labels: {
@@ -19,8 +17,6 @@ type Props = {
 export default function HeroGrandPrizeCard({
   name,
   value,
-  imageUrl,
-  emoji,
   status,
   statusLabel,
   labels,
@@ -83,7 +79,7 @@ export default function HeroGrandPrizeCard({
               </div>
             ))}
 
-            <HeroGrandPrizeVisual alt={name} imageUrl={imageUrl} emoji={emoji} />
+            <HeroIphoneShowcase alt={name} />
           </div>
         </div>
       </div>

@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import BlindBoxGame from "@/components/BlindBoxGame";
 import HeroRewardPanel from "@/components/landing/HeroRewardPanel";
 import MobileFixedCta from "@/components/landing/MobileFixedCta";
-import HeroIphoneShowcase from "@/components/landing/HeroIphoneShowcase";
 import { useI18n } from "@/lib/i18n-context";
 import {
   formatPublicWinnerLine,
@@ -265,10 +264,6 @@ export default function BlindBoxLanding({
               {config.heroSubtitle ?? mob.subtitle}
             </p>
 
-            <div className="mt-5 hidden max-w-[280px] lg:block">
-              <HeroIphoneShowcase alt={mob.titleLine2} />
-            </div>
-
             <div className="mt-5 lg:mt-4">
               <BlindBoxOpenPrice fullPrice={config.price} size="hero" />
               <span className="mt-0.5 block text-[14px] text-white/55">{l.perOpen}</span>
@@ -325,8 +320,6 @@ export default function BlindBoxLanding({
           <HeroRewardPanel
             grandPrizeName={grandPrize.name}
             grandPrizeValue={grandPrize.value}
-            grandPrizeImageUrl={grandPrize.imageUrl}
-            prizeEmoji={grandPrize.emoji}
             grandPrizeStatus={stats?.grandPrizeStatus ?? "available"}
             grandStatusLabel={grandStatusLabel}
             statsCards={statsCards}

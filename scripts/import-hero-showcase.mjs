@@ -23,8 +23,11 @@ const SHOWCASE = [
 ];
 
 function isCheckerboard(r, g, b) {
-  if (Math.abs(r - g) > 12 || Math.abs(g - b) > 12) return false;
-  return r >= 165;
+  if (Math.abs(r - g) > 10 || Math.abs(g - b) > 10) return false;
+  // Only strip true Photoshop/Cursor checkerboard tiles (#FFF / #CCC), not product silver.
+  if (r >= 248) return true;
+  if (r >= 198 && r <= 212) return true;
+  return false;
 }
 
 function findAsset(id) {

@@ -49,8 +49,8 @@ export function buildPoolHighlightChips(
 
   const positions = [
     "top-2 right-2",
-    "top-[45%] right-2",
-    "bottom-3 right-2",
+    "top-[18%] -right-2",
+    "bottom-4 right-2",
   ] as const;
 
   return highlights.map((prize, index) => ({

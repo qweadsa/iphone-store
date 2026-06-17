@@ -13,7 +13,6 @@ type StatCard = {
 type Props = {
   grandPrizeName: string;
   grandPrizeValue: string;
-  grandPrizeImageUrl?: string | null;
   grandPrizeStatus: GrandPrizeStatus;
   grandStatusLabel: string;
   statsCards: StatCard[];
@@ -29,13 +28,11 @@ type Props = {
     winnersSubtitle: string;
     winnersEmpty: string;
   };
-  prizeEmoji?: string;
 };
 
 export default function HeroRewardPanel({
   grandPrizeName,
   grandPrizeValue,
-  grandPrizeImageUrl,
   grandPrizeStatus,
   grandStatusLabel,
   statsCards,
@@ -44,15 +41,12 @@ export default function HeroRewardPanel({
   showStats = true,
   statsDesktopOnly = false,
   labels,
-  prizeEmoji,
 }: Props) {
   return (
     <div className="flex w-full flex-col gap-3 lg:gap-4">
       <HeroGrandPrizeCard
         name={grandPrizeName}
         value={grandPrizeValue}
-        imageUrl={grandPrizeImageUrl}
-        emoji={prizeEmoji}
         status={grandPrizeStatus}
         statusLabel={grandStatusLabel}
         floatingChips={floatingChips}
