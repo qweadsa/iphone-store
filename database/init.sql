@@ -246,3 +246,17 @@ ALTER TABLE site_settings
 
 ALTER TABLE orders
   ADD COLUMN IF NOT EXISTS payment_id VARCHAR(40) DEFAULT NULL;
+
+CREATE TABLE IF NOT EXISTS site_visits (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  visitor_hash  VARCHAR(64) NOT NULL,
+  path          VARCHAR(500) NOT NULL,
+  referrer      VARCHAR(500) DEFAULT NULL,
+  user_agent    VARCHAR(500) DEFAULT NULL,
+  created_at    DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  INDEX idx_site_visits_created_at (created_at),
+  INDEX idx_site_visits_visitor_created (visitor_hash, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE site_settings
+  ADD COLUMN IF NOT EXISTS live_count_started_at DATETIME(3) DEFAULT NULL;

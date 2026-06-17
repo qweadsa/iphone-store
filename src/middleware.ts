@@ -1,5 +1,5 @@
+import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import {
   ADMIN_COOKIE,
   getAdminLoginPath,
@@ -8,6 +8,30 @@ import {
   verifyAdminCookieValue,
 } from "@/lib/admin-auth";
 import { isProduction } from "@/lib/session-token";
+import { shouldTrackVisit } from "@/lib/site-analytics";
+
+const VISITOR_COOKIE = "vs_vid";
+
+function queueVisitTrack(event: NextFetchEvent, request: NextRequest, visitorId: string) {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) return;
+
+  const path = request.nextUrl.pathname + request.nextUrl.search;
+  event.waitUntil(
+    fetch(new URL("/api/internal/track-visit", request.url), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-track-secret": secret,
+        "x-forwarded-for": request.headers.get("x-forwarded-for") ?? "",
+        "x-real-ip": request.headers.get("x-real-ip") ?? "",
+        "user-agent": request.headers.get("user-agent") ?? "",
+        referer: request.headers.get("referer") ?? "",
+      },
+      body: JSON.stringify({ path, visitorId }),
+    }).catch(() => undefined),
+  );
+}
 
 function withSecurityHeaders(res: NextResponse): NextResponse {
   res.headers.set("X-Frame-Options", "DENY");
@@ -24,7 +48,7 @@ function withSecurityHeaders(res: NextResponse): NextResponse {
   return res;
 }
 
-export async function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
   if (isProduction()) {
@@ -44,7 +68,22 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!pathname.startsWith("/admin")) {
-    return withSecurityHeaders(NextResponse.next());
+    const res = withSecurityHeaders(NextResponse.next());
+    if (shouldTrackVisit(pathname)) {
+      let visitorId = request.cookies.get(VISITOR_COOKIE)?.value;
+      if (!visitorId) {
+        visitorId = crypto.randomUUID();
+        res.cookies.set(VISITOR_COOKIE, visitorId, {
+          maxAge: 60 * 60 * 24 * 30,
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          secure: isProduction(),
+        });
+      }
+      queueVisitTrack(event, request, visitorId);
+    }
+    return res;
   }
 
   const adminToken = request.cookies.get(ADMIN_COOKIE)?.value;

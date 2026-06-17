@@ -5,6 +5,7 @@ import AdminShell from "@/components/admin/AdminShell";
 
 const ADMIN_PANEL_PREFIXES = [
   "/admin/blindbox",
+  "/admin/traffic",
   "/admin/payments",
   "/admin/orders",
   "/admin/products",

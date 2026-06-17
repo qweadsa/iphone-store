@@ -81,8 +81,22 @@ model SiteSettings {
   receiveNote        String? @map("receive_note") @db.Text
   paymentRequireAdminConfirm Boolean @default(true) @map("payment_require_admin_confirm")
   supportTelegramUrl String? @map("support_telegram_url") @db.VarChar(500)
+  liveCountStartedAt DateTime? @map("live_count_started_at")
 
   @@map("site_settings")
+}
+
+model SiteVisit {
+  id          Int      @id @default(autoincrement())
+  visitorHash String   @map("visitor_hash") @db.VarChar(64)
+  path        String   @db.VarChar(500)
+  referrer    String?  @db.VarChar(500)
+  userAgent   String?  @map("user_agent") @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([visitorHash, createdAt])
+  @@map("site_visits")
 }
 
 model Order {

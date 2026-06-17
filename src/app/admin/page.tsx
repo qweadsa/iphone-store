@@ -47,6 +47,9 @@ export default async function AdminDashboard() {
       <div className="mt-10 rounded-xl border border-white/10 bg-white/5 p-6">
         <h2 className="font-semibold">快速操作</h2>
         <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/admin/traffic" className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-300 hover:bg-amber-500/20">
+            直播访问统计
+          </Link>
           <Link href="/admin/blindbox" className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-black">
             修改盲盒概率
           </Link>
