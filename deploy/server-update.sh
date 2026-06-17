@@ -95,11 +95,19 @@ if command -v nginx >/dev/null; then
     cp deploy/nginx-teumu.online-http.conf /etc/nginx/sites-available/teumu.online
     nginx -t && systemctl restart nginx
   fi
-else
-  echo "    未安装 Nginx，执行: bash deploy/setup-nginx.sh"
+  else
+    echo "    未安装 Nginx，执行: bash deploy/setup-nginx.sh"
 fi
 
-echo "==> done"
+# 有 SSL 证书用 https，否则先用 http（避免后台被强制跳到打不开的 https）
+if [ -f /etc/letsencrypt/live/teumu.online/fullchain.pem ]; then
+  merge_env_var "NEXT_PUBLIC_SITE_URL" "https://teumu.online" "$ENV_FILE"
+  echo "    NEXT_PUBLIC_SITE_URL=https://teumu.online"
+else
+  merge_env_var "NEXT_PUBLIC_SITE_URL" "http://teumu.online" "$ENV_FILE"
+  echo "    NEXT_PUBLIC_SITE_URL=http://teumu.online (未检测到 SSL，配置证书后重新运行本脚本)"
+fi
+systemctl restart iphone-store
 echo "    Admin login: https://teumu.online/admin/teumu-mgmt-9284"
 curl -s -o /dev/null -w "app :3000 => HTTP %{http_code}\n" http://127.0.0.1:3000 || true
 curl -s -o /dev/null -w "nginx :80  => HTTP %{http_code}\n" -H "Host: teumu.online" http://127.0.0.1/ || true
