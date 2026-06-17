@@ -63,7 +63,8 @@ npm ci
 echo "==> prisma"
 npx prisma generate
 npx prisma db push
-npx prisma db seed 2>/dev/null || true
+# 不自动 seed：避免每次更新覆盖你在后台改过的奖品/配置
+# 仅首次空库需要时手动执行: npx prisma db seed
 
 echo "==> build"
 npm run build

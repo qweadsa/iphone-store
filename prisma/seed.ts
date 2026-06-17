@@ -24,16 +24,20 @@ async function main() {
     update: {},
     create: {
       id: 1,
-      price: 60,
+      price: 25,
       enabled: true,
       grandPrizeName: "iPhone 17 Pro Max",
-      grandPrizeValue: "$1,199",
+      grandPrizeValue: "RM5,999",
       heroTitle: "Win an iPhone 17 Pro Max",
       heroSubtitle:
-        "Just $60 for one chance at the grand prize! Every box is a surprise.",
-      seoTitle: "iPhone Mystery Box — Win iPhone 17 Pro Max for $60",
+        "Just RM25 for one chance at the grand prize! Every box is a surprise.",
+      seoTitle: "iPhone Mystery Box Malaysia — Win iPhone 17 Pro Max",
       seoDescription:
-        "Try the $60 iPhone Mystery Box. Win an iPhone 17 Pro Max worth $1,199. Limited event, free shipping in the USA.",
+        "Try the RM25 iPhone Mystery Box. Win an iPhone 17 Pro Max worth RM5,999. Free shipping across Malaysia.",
+      statsDemoMode: true,
+      displayPlayersToday: 128,
+      displayWinnersToday: 42,
+      winnersDemoMode: true,
     },
   });
 
