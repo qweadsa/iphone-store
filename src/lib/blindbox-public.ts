@@ -88,7 +88,7 @@ export function formatPublicWinnerLine(
     if (lang === "ms") return `${who} memenangi hadiah utama hari ini ${prizeName}`;
     return `${who} won today's grand prize ${prizeName}`;
   }
-  if (lang === "zh") return `${who} 刚刚开启盲盒，获得 ${prizeName}`;
+  if (lang === "zh") return `${who} 刚刚开启礼盒，获得 ${prizeName}`;
   if (lang === "ms") return `${who} membuka kotak dan memenangi ${prizeName}`;
   return `${who} just opened a box and won ${prizeName}`;
 }

@@ -21,14 +21,20 @@ export async function GET(req: Request) {
   if (status && status !== "all") where.status = status;
   if (purpose && purpose !== "all") where.purpose = purpose;
 
-  const rows = await prisma.payment.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: {
-      user: { select: { id: true, name: true, email: true } },
-    },
-  });
+  const limitRaw = Number(searchParams.get("limit") ?? "30");
+  const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 10), 100) : 30;
+
+  const [totalCount, rows] = await Promise.all([
+    prisma.payment.count({ where }),
+    prisma.payment.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+      },
+    }),
+  ]);
 
   const payments = rows.map((p) => ({
     paymentId: p.paymentId,
@@ -77,5 +83,5 @@ export async function GET(req: Request) {
     createdAt: p.createdAt.toISOString(),
   }));
 
-  return NextResponse.json({ payments, pendingCount, active });
+  return NextResponse.json({ payments, pendingCount, active, totalCount, limit });
 }

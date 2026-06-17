@@ -98,7 +98,7 @@ export default function TrafficDashboard() {
           <div>
             <h2 className="text-lg font-bold text-amber-300">本场直播引流</h2>
             <p className="mt-1 max-w-xl text-sm text-white/60">
-              开播前点「开始计数」，直播期间这里会实时显示有多少人打开网站。数字每 5 秒自动刷新。
+              开播前点「开始计数」，直播期间这里会实时显示有多少人打开网站（直接口播网址即可，无需特殊链接）。数字每 5 秒自动刷新。
             </p>
             {stats.live.active && stats.live.startedAt && (
               <p className="mt-2 text-xs text-white/45">

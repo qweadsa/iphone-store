@@ -103,19 +103,23 @@ export default function ReceiveSettingsPage() {
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [activePaying, setActivePaying] = useState<ActivePayment[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [listLimit, setListLimit] = useState(30);
   const [statusFilter, setStatusFilter] = useState("all");
   const [msg, setMsg] = useState("");
   const [uploading, setUploading] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
 
   const loadPayments = useCallback(async () => {
-    const res = await fetch(`/api/admin/payments/orders?status=${statusFilter}`);
+    const res = await fetch(`/api/admin/payments/orders?status=${statusFilter}&limit=${listLimit}`);
     const data = await res.json();
     if (data.payments) setPayments(data.payments);
     if (data.active) setActivePaying(data.active);
     if (typeof data.pendingCount === "number") setPendingCount(data.pendingCount);
-  }, [statusFilter]);
+    if (typeof data.totalCount === "number") setTotalCount(data.totalCount);
+  }, [statusFilter, listLimit]);
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -135,6 +139,33 @@ export default function ReceiveSettingsPage() {
     const timer = window.setInterval(loadPayments, 3000);
     return () => window.clearInterval(timer);
   }, [loadPayments]);
+
+  async function clearFinishedPayments() {
+    if (
+      !confirm(
+        "确定清除所有「已确认收款」和「用户已取消」的记录吗？\n正在付款中的记录会保留。",
+      )
+    ) {
+      return;
+    }
+    setClearing(true);
+    setMsg("");
+    try {
+      const res = await fetch("/api/admin/payments/cleanup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope: "completed_cancelled" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { deleted?: number; error?: string };
+      if (!res.ok) throw new Error(data.error || "清除失败");
+      setMsg(`✅ 已清除 ${data.deleted ?? 0} 条历史付款记录`);
+      await loadPayments();
+    } catch (e) {
+      setMsg(`❌ ${e instanceof Error ? e.message : "清除失败"}`);
+    } finally {
+      setClearing(false);
+    }
+  }
 
   async function cancelPayment(paymentId: string) {
     setCancelling(paymentId);
@@ -289,18 +320,40 @@ export default function ReceiveSettingsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold">付款记录</h2>
-            <p className="mt-1 text-xs text-white/40">历史记录：已确认 / 已取消</p>
+            <p className="mt-1 text-xs text-white/40">
+              共 {totalCount.toLocaleString()} 条 · 仅显示最近 {listLimit} 条
+            </p>
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
-          >
-            <option value="all">全部记录</option>
-            <option value="completed">已确认收款</option>
-            <option value="cancelled">用户已取消</option>
-            <option value="pending">正在付款</option>
-          </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={String(listLimit)}
+              onChange={(e) => setListLimit(Number(e.target.value))}
+              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            >
+              <option value="20">显示 20 条</option>
+              <option value="30">显示 30 条</option>
+              <option value="50">显示 50 条</option>
+              <option value="100">显示 100 条</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            >
+              <option value="all">全部记录</option>
+              <option value="completed">已确认收款</option>
+              <option value="cancelled">用户已取消</option>
+              <option value="pending">正在付款</option>
+            </select>
+            <button
+              type="button"
+              disabled={clearing}
+              onClick={() => void clearFinishedPayments()}
+              className="rounded-lg border border-red-500/40 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+            >
+              {clearing ? "清除中..." : "清除已完成记录"}
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 space-y-3">
