@@ -7,18 +7,24 @@ import {
   isAdminLoginPathname,
   verifyAdminCookieValue,
 } from "@/lib/admin-auth";
-import { isProduction } from "@/lib/session-token";
+import { getSessionSecret, isProduction } from "@/lib/session-token";
 import { shouldTrackVisit } from "@/lib/site-analytics";
 
 const VISITOR_COOKIE = "vs_vid";
 
-function queueVisitTrack(event: NextFetchEvent, request: NextRequest, visitorId: string) {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) return;
+function internalTrackVisitUrl(request: NextRequest): string {
+  const port = process.env.PORT?.trim() || "3000";
+  if (isProduction()) {
+    return `http://127.0.0.1:${port}/api/internal/track-visit`;
+  }
+  return new URL("/api/internal/track-visit", request.url).toString();
+}
 
+function queueVisitTrack(event: NextFetchEvent, request: NextRequest, visitorId: string) {
+  const secret = getSessionSecret();
   const path = request.nextUrl.pathname + request.nextUrl.search;
   event.waitUntil(
-    fetch(new URL("/api/internal/track-visit", request.url), {
+    fetch(internalTrackVisitUrl(request), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -27,6 +33,7 @@ function queueVisitTrack(event: NextFetchEvent, request: NextRequest, visitorId:
         "x-real-ip": request.headers.get("x-real-ip") ?? "",
         "user-agent": request.headers.get("user-agent") ?? "",
         referer: request.headers.get("referer") ?? "",
+        host: request.headers.get("host") ?? "",
       },
       body: JSON.stringify({ path, visitorId }),
     }).catch(() => undefined),

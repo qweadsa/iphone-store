@@ -2,7 +2,7 @@
 
 const DEFAULT_SECRET = "dev-insecure-change-before-production";
 
-function getSecret(): string {
+export function getSessionSecret(): string {
   return process.env.SESSION_SECRET?.trim() || DEFAULT_SECRET;
 }
 
@@ -28,7 +28,7 @@ function decodeBytes(base64url: string): Uint8Array | null {
 async function importKey(): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(getSecret()),
+    new TextEncoder().encode(getSessionSecret()),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign", "verify"],

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSessionSecret } from "@/lib/session-token";
 import {
   buildVisitorKey,
   isLikelyBot,
@@ -6,9 +7,8 @@ import {
 } from "@/lib/site-analytics";
 
 function trackSecretOk(req: Request): boolean {
-  const expected = process.env.SESSION_SECRET ?? "";
-  if (!expected) return false;
-  return req.headers.get("x-track-secret") === expected;
+  const header = req.headers.get("x-track-secret") ?? "";
+  return header === getSessionSecret();
 }
 
 export async function POST(req: Request) {

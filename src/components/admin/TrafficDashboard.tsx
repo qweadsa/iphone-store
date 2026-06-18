@@ -96,9 +96,22 @@ export default function TrafficDashboard() {
       <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-amber-300">本场直播引流</h2>
+            <h2 className="text-lg font-bold text-amber-300">每日访问（自动统计）</h2>
+            <p className="mt-1 max-w-2xl text-sm text-white/60">
+              只要有人打开首页、产品页等前台页面，就会自动记入「今日累计」和下方列表。
+              后台页面、图片资源不计入。请用另一台设备或手机无痕模式访问{" "}
+              <span className="font-mono text-amber-200/90">teumu.online</span> 测试。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-white/90">直播专场计数（可选）</h2>
             <p className="mt-1 max-w-xl text-sm text-white/60">
-              开播前点「开始计数」，直播期间这里会实时显示有多少人打开网站（直接口播网址即可，无需特殊链接）。数字每 5 秒自动刷新。
+              只在直播需要单独统计「从开播起」多少人访问时使用。不影响上面的「今日累计」。
             </p>
             {stats.live.active && stats.live.startedAt && (
               <p className="mt-2 text-xs text-white/45">
