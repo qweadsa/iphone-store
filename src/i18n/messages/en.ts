@@ -336,7 +336,8 @@ export const en = {
     confirmPaid: "I've completed the transfer",
     confirmPaidHint: "Tap after paying to continue your draw or order",
     paymentRefLabel: "Payment reference (include in transfer note)",
-    transferMemoHint: "Add this ID to your payment memo so we can match your transfer",
+    transferMemoHint:
+      "Copy this ID before paying and paste it in your TNG transfer note so we can match your payment; we also use it when confirming shipment so your prize goes to the right person.",
     awaitingMerchant: "Waiting for merchant confirmation",
     awaitingMerchantHint: "Your draw will start automatically once we confirm payment",
     merchantConfirmed: "Payment confirmed — continuing…",

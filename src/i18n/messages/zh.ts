@@ -330,7 +330,8 @@ export const zh: Messages = {
     confirmPaid: "我已完成转账",
     confirmPaidHint: "转账完成后点击确认，即可继续抽奖或下单",
     paymentRefLabel: "付款参考号（TNG 转账备注请填写）",
-    transferMemoHint: "扫码付款前请先复制此编号，在 TNG 转账备注里粘贴，方便商家核对是哪一位客户",
+    transferMemoHint:
+      "扫码付款前请先复制此编号，在 TNG 转账备注里粘贴，方便商家核对是哪一位客户；后续确认发货时也靠此编号，确保奖品发到您本人、不会搞错客户。",
     awaitingMerchant: "等待商家确认收款",
     awaitingMerchantHint: "确认到账后将自动开始抽奖，请勿关闭页面",
     merchantConfirmed: "已确认收款，正在继续…",

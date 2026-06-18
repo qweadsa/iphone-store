@@ -334,7 +334,8 @@ export const ms = {
     confirmPaid: "I've completed the transfer",
     confirmPaidHint: "Tap after paying to continue your draw or order",
     paymentRefLabel: "Payment reference (include in transfer note)",
-    transferMemoHint: "Add this ID to your payment memo so we can match your transfer",
+    transferMemoHint:
+      "Salin ID ini sebelum bayar dan tampal dalam nota pemindahan TNG supaya kami kenal pasti pelanggan; ID yang sama digunakan semasa pengesahan penghantaran hadiah.",
     awaitingMerchant: "Waiting for merchant confirmation",
     awaitingMerchantHint: "Your draw will start automatically once we confirm payment",
     merchantConfirmed: "Payment confirmed — continuing…",

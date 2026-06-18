@@ -591,16 +591,14 @@ function QrPanel({
         </span>
       </div>
       <div className="mt-4 flex justify-center">
-        <div className="rounded-2xl bg-white p-3 shadow-lg">
-          <Image
-            src={activeQr.qrDataUrl}
-            alt={title}
-            width={200}
-            height={200}
-            className="rounded-lg"
-            unoptimized
-          />
-        </div>
+        <Image
+          src={activeQr.qrDataUrl}
+          alt={title}
+          width={280}
+          height={280}
+          className="h-auto w-full max-w-[280px] object-contain"
+          unoptimized
+        />
       </div>
 
       {!isStatic && !hideUrl && activeQr.url && (
