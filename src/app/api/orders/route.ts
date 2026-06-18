@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isDatabaseConfigured, prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/orders";
+import { findGuestBlindboxPayment } from "@/lib/guest-order-lookup";
 
 type OrderItemInput = {
   productId: string;
@@ -107,10 +108,14 @@ export async function GET(req: Request) {
     });
 
     if (!order) {
+      const blindbox = await findGuestBlindboxPayment(orderNumber, email);
+      if (blindbox) {
+        return NextResponse.json(blindbox);
+      }
       return NextResponse.json({ error: "未找到订单" }, { status: 404 });
     }
 
-    return NextResponse.json(order);
+    return NextResponse.json({ kind: "order", ...order });
   } catch {
     return NextResponse.json({ error: "查询失败" }, { status: 500 });
   }
