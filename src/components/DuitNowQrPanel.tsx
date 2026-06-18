@@ -33,7 +33,6 @@ type Props = {
   loading: boolean;
   activeQr: MethodQr | null;
   amount: number;
-  paymentId?: string;
   receiveNote?: string | null;
   p: PaymentCopy;
 };
@@ -56,7 +55,6 @@ export default function DuitNowQrPanel({
   loading,
   activeQr,
   amount,
-  paymentId,
   receiveNote,
   p,
 }: Props) {
@@ -137,10 +135,6 @@ export default function DuitNowQrPanel({
             </div>
           </QrFrame>
         </div>
-
-        {paymentId && (
-          <p className="mt-3 text-center font-mono text-[11px] text-gray-400">{paymentId}</p>
-        )}
 
         <ol className="mt-4 space-y-2">
           {steps.map((step, i) => (

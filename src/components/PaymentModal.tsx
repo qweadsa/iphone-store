@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatPrice } from "@/lib/products";
@@ -11,6 +10,7 @@ import type { MethodQr } from "@/lib/payments/types";
 import { CHECKOUT_METHODS, DEFAULT_CHECKOUT_METHOD, getMethodLabel, type PaymentMethodId } from "@/lib/payments/methods";
 import { getPaymentTransferRef } from "@/lib/payment-ref";
 import PaymentMethodIcon from "./PaymentMethodIcon";
+import DuitNowQrPanel from "@/components/DuitNowQrPanel";
 
 type Props = {
   amount: number;
@@ -98,8 +98,6 @@ export default function PaymentModal({
     };
     return labels[id] ?? getMethodLabel(id);
   };
-
-  const selectedLabel = methodLabel(selected);
 
   function isValidGuestEmail(value: string) {
     const email = value.trim().toLowerCase();
@@ -322,8 +320,12 @@ export default function PaymentModal({
         <div className="border-b border-white/10 bg-gradient-to-r from-[#FFB800]/10 to-transparent px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-[#FFB800]">
-                {p.secureCheckout}
+              <p
+                className={`text-[11px] font-semibold uppercase tracking-widest ${
+                  showQrFlow ? "text-[#ED0677]" : "text-[#FFB800]"
+                }`}
+              >
+                {showQrFlow ? p.duitnowCheckoutBadge : p.secureCheckout}
               </p>
               <h2 className="mt-1 text-lg font-bold text-white">{title}</h2>
               <p className="mt-1 text-3xl font-bold text-[#FFB800]">
@@ -438,10 +440,9 @@ export default function PaymentModal({
                       methodLabel={methodLabel}
                     />
                   )}
-                  <QrPanel
+                  <DuitNowQrPanel
                     loading={qrLoading || payLoading}
                     activeQr={activeQr}
-                    title={HAS_MULTIPLE_METHODS ? `${p.scanToPay} ${selectedLabel}` : p.qrTitle}
                     amount={amount}
                     receiveNote={payment.receiveNote}
                     p={p}
@@ -545,76 +546,6 @@ function PaymentRefBanner({
         </button>
       </div>
       <p className="mt-2 text-[11px] leading-relaxed text-[#FFB800]/85">{hint}</p>
-    </div>
-  );
-}
-
-function QrPanel({
-  loading,
-  activeQr,
-  title,
-  amount,
-  receiveNote,
-  p,
-}: {
-  loading: boolean;
-  activeQr: MethodQr | null;
-  title: string;
-  amount: number;
-  receiveNote?: string | null;
-  p: Record<string, string>;
-}) {
-  if (loading) {
-    return (
-      <div className="mt-4 flex h-[260px] items-center justify-center rounded-xl border border-white/10 bg-white/5">
-        <p className="text-sm text-white/40">{p.loading}</p>
-      </div>
-    );
-  }
-  if (!activeQr) {
-    return (
-      <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center text-sm text-red-300">
-        {p.error}
-      </div>
-    );
-  }
-
-  const isStatic = activeQr.staticImage || activeQr.qrDataUrl.startsWith("/");
-  const hideUrl =
-    !activeQr.url ||
-    activeQr.url.includes("/pay/PAY-") ||
-    activeQr.url.startsWith("/");
-
-  return (
-    <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-white">{title}</p>
-        <span className="rounded-full bg-[#FFB800]/20 px-2 py-0.5 text-xs font-semibold text-[#FFB800]">
-          {formatPrice(amount)}
-        </span>
-      </div>
-      <div className="payment-qr-wrap mt-3">
-        <Image
-          src={activeQr.qrDataUrl}
-          alt={title}
-          fill
-          className="payment-qr-image"
-          unoptimized
-          sizes="300px"
-        />
-      </div>
-
-      {!isStatic && !hideUrl && activeQr.url && (
-        <p className="mt-3 break-all text-center text-[11px] text-[#FFB800]/80">
-          <a href={activeQr.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-            {p.openPayLink}
-          </a>
-        </p>
-      )}
-
-      {receiveNote && (
-        <p className="mt-3 text-center text-xs text-white/40">{receiveNote}</p>
-      )}
     </div>
   );
 }
