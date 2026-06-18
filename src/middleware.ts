@@ -8,7 +8,7 @@ import {
   verifyAdminCookieValue,
 } from "@/lib/admin-auth";
 import { getSessionSecret, isProduction } from "@/lib/session-token";
-import { shouldTrackVisit } from "@/lib/site-analytics";
+import { shouldTrackVisit, shouldTrackRequest } from "@/lib/site-analytics";
 
 const VISITOR_COOKIE = "vs_vid";
 
@@ -26,7 +26,7 @@ function queueVisitTrack(
   persistedVisitorId: string | null,
 ) {
   const secret = getSessionSecret();
-  const path = request.nextUrl.pathname + request.nextUrl.search;
+  const path = request.nextUrl.pathname;
   event.waitUntil(
     fetch(internalTrackVisitUrl(request), {
       method: "POST",
@@ -80,7 +80,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
 
   if (!pathname.startsWith("/admin")) {
     const res = withSecurityHeaders(NextResponse.next());
-    if (shouldTrackVisit(pathname)) {
+    if (shouldTrackVisit(pathname) && shouldTrackRequest(request.method, request.headers)) {
       const persistedVisitorId = request.cookies.get(VISITOR_COOKIE)?.value ?? null;
       const visitorId = persistedVisitorId ?? crypto.randomUUID();
       res.cookies.set(VISITOR_COOKIE, visitorId, {

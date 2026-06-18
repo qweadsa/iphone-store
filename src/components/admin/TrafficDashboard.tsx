@@ -96,7 +96,14 @@ export default function TrafficDashboard() {
     return () => window.clearInterval(id);
   }, [load, page]);
 
-  async function runAction(action: "start-live" | "reset-live") {
+  async function runAction(action: "start-live" | "reset-live" | "reset-all") {
+    if (action === "reset-all") {
+      const ok = window.confirm(
+        "确定清空全部访问记录吗？\n\n将删除今日累计、最近 1 小时、本场直播的所有浏览数据，且无法恢复。",
+      );
+      if (!ok) return;
+    }
+
     setBusy(true);
     setMsg("");
     const res = await fetch("/api/admin/traffic", {
@@ -110,8 +117,15 @@ export default function TrafficDashboard() {
     };
     if (res.ok && data.stats) {
       setStats(data.stats);
+      setPage(1);
       setLastUpdated(new Date());
-      setMsg(action === "start-live" ? "✅ 已开始本场直播计数" : "✅ 已重置直播计数");
+      setMsg(
+        action === "start-live"
+          ? "✅ 已开始本场直播计数"
+          : action === "reset-live"
+            ? "✅ 已重置直播计数起点（历史记录仍保留）"
+            : "✅ 已清空全部访问数据",
+      );
     } else {
       setMsg(`❌ ${data.error || "操作失败"}`);
     }
@@ -141,16 +155,26 @@ export default function TrafficDashboard() {
             <h2 className="text-lg font-bold text-amber-300">每日访问（自动统计）</h2>
             <p className="mt-1 max-w-2xl text-sm text-white/60">
               只要有人打开首页、产品页等前台页面，就会自动记入「今日累计」和下方列表。
-              后台页面、图片资源不计入。同一浏览器反复刷新只增加「浏览次数」，独立访客不会重复累加。
+              后台页面、图片资源、导航栏预加载不计入。同一浏览器反复刷新只增加「浏览次数」，独立访客不会重复累加。
               测试新访客请用另一台设备或手机无痕模式访问{" "}
               <span className="font-mono text-amber-200/90">teumu.online</span>。
             </p>
           </div>
-          {lastUpdated && (
-            <p className="text-xs text-white/35">
-              数据每 5 秒刷新 · 上次 {fmtTime(lastUpdated.toISOString())}
-            </p>
-          )}
+          <div className="flex flex-col items-end gap-2">
+            {lastUpdated && (
+              <p className="text-xs text-white/35">
+                数据每 5 秒刷新 · 上次 {fmtTime(lastUpdated.toISOString())}
+              </p>
+            )}
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void runAction("reset-all")}
+              className="rounded-lg border border-red-500/40 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+            >
+              清空全部访问数据
+            </button>
+          </div>
         </div>
       </div>
 
@@ -182,7 +206,7 @@ export default function TrafficDashboard() {
               onClick={() => void runAction("reset-live")}
               className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5 disabled:opacity-50"
             >
-              重置计数
+              重置直播起点
             </button>
           </div>
         </div>

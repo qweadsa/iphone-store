@@ -50,13 +50,38 @@ export function buildVisitorKey(input: {
   );
 }
 
+export function normalizeTrackPath(pathname: string): string {
+  const path = pathname.trim() || "/";
+  return path.length > 500 ? path.slice(0, 500) : path;
+}
+
+export function shouldTrackRequest(method: string, headers: { get(name: string): string | null }): boolean {
+  if (method !== "GET") return false;
+  // Next.js Link prefetch — user did not actually open the page
+  if (headers.get("next-router-prefetch") === "1") return false;
+  if (headers.get("purpose")?.toLowerCase() === "prefetch") return false;
+  if (headers.get("sec-purpose")?.toLowerCase() === "prefetch") return false;
+  return true;
+}
+
 export async function recordSiteVisit(input: {
   visitorHash: string;
   path: string;
   referrer?: string | null;
   userAgent?: string | null;
 }) {
-  const path = input.path.slice(0, 500);
+  const path = normalizeTrackPath(input.path);
+  const since = new Date(Date.now() - 3000);
+  const recent = await prisma.siteVisit.findFirst({
+    where: {
+      visitorHash: input.visitorHash,
+      path,
+      createdAt: { gte: since },
+    },
+    select: { id: true },
+  });
+  if (recent) return;
+
   await prisma.siteVisit.create({
     data: {
       visitorHash: input.visitorHash,
@@ -147,6 +172,17 @@ export async function resetLiveTrafficCount() {
     create: { id: 1, liveCountStartedAt: null },
     update: { liveCountStartedAt: null },
   });
+}
+
+export async function resetAllTrafficData() {
+  await prisma.$transaction([
+    prisma.siteVisit.deleteMany(),
+    prisma.siteSettings.upsert({
+      where: { id: 1 },
+      create: { id: 1, liveCountStartedAt: null },
+      update: { liveCountStartedAt: null },
+    }),
+  ]);
 }
 
 export function shouldTrackVisit(pathname: string): boolean {

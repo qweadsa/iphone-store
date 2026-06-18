@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   getTrafficStats,
+  resetAllTrafficData,
   resetLiveTrafficCount,
   startLiveTrafficCount,
 } from "@/lib/site-analytics";
@@ -37,6 +38,12 @@ export async function POST(req: Request) {
 
     if (action === "reset-live") {
       await resetLiveTrafficCount();
+      const stats = await getTrafficStats();
+      return NextResponse.json({ ok: true, stats });
+    }
+
+    if (action === "reset-all") {
+      await resetAllTrafficData();
       const stats = await getTrafficStats();
       return NextResponse.json({ ok: true, stats });
     }
