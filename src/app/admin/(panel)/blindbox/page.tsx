@@ -73,6 +73,14 @@ function willShowOnFrontend(prize: Prize): boolean {
   return prize.active && prize.showInPool && prize.fulfillmentType !== "retry";
 }
 
+function normalizePrizeForSave(prize: Prize): Prize {
+  return {
+    ...prize,
+    showInPool: prize.fulfillmentType === "retry" ? false : true,
+    active: prize.active || prize.fulfillmentType !== "retry",
+  };
+}
+
 function normalizePrize(raw: Record<string, unknown>): Prize {
   return {
     id: Number(raw.id),
@@ -90,6 +98,10 @@ function normalizePrize(raw: Record<string, unknown>): Prize {
     active: raw.active !== false && raw.active !== 0,
     sortOrder: Number(raw.sortOrder ?? raw.sort_order) || 0,
   };
+  if (prize.fulfillmentType !== "retry") {
+    prize.showInPool = true;
+  }
+  return prize;
 }
 
 export default function BlindBoxAdminPage() {
@@ -154,15 +166,19 @@ export default function BlindBoxAdminPage() {
       if (!opts?.quiet) setMsg("❌ 奖品数据不完整，请刷新页面后重试");
       return false;
     }
+    const payload = normalizePrizeForSave(prize);
     if (!opts?.quiet) setMsg("保存中...");
-    const res = await fetch(`/api/admin/blindbox/prizes/${prize.id}`, {
+    const res = await fetch(`/api/admin/blindbox/prizes/${payload.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(prize),
+      body: JSON.stringify(payload),
     });
     const data = (await res.json().catch(() => ({}))) as { error?: string };
     if (res.ok) {
       if (!opts?.quiet) setMsg("✅ 礼品已保存，首页奖池已更新");
+      setPrizes((prev) =>
+        prev.map((p) => (p.id === payload.id ? { ...p, ...payload } : p)),
+      );
       await reload();
       return true;
     }
@@ -196,7 +212,7 @@ export default function BlindBoxAdminPage() {
         return fetch(`/api/admin/blindbox/prizes/${prize.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(prize),
+          body: JSON.stringify(normalizePrizeForSave(prize)),
         });
       }),
     );
@@ -210,9 +226,13 @@ export default function BlindBoxAdminPage() {
   }
 
   async function savePrizeImage(idx: number, url: string | null) {
-    const next = { ...prizes[idx], imageUrl: url };
-    updatePrize(idx, { imageUrl: url });
-    await savePrize(next);
+    const payload = normalizePrizeForSave({ ...prizes[idx], imageUrl: url });
+    updatePrize(idx, {
+      imageUrl: url,
+      showInPool: payload.showInPool,
+      active: payload.active,
+    });
+    await savePrize(payload);
   }
 
   async function addPrize() {
@@ -275,7 +295,7 @@ export default function BlindBoxAdminPage() {
         fetch(`/api/admin/blindbox/prizes/${p.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(p),
+          body: JSON.stringify(normalizePrizeForSave(p)),
         }),
       ),
     );
@@ -516,7 +536,18 @@ export default function BlindBoxAdminPage() {
                     <span className="text-white/70">发奖类型</span>
                     <select
                       value={prize.fulfillmentType}
-                      onChange={(e) => updatePrize(idx, { fulfillmentType: e.target.value })}
+                      onChange={(e) => {
+                        const fulfillmentType = e.target.value;
+                        if (fulfillmentType === "retry") {
+                          updatePrize(idx, { fulfillmentType, showInPool: false });
+                        } else {
+                          updatePrize(idx, {
+                            fulfillmentType,
+                            showInPool: true,
+                            active: true,
+                          });
+                        }
+                      }}
                       className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
                     >
                       {FULFILLMENTS.map((f) => (
@@ -525,6 +556,16 @@ export default function BlindBoxAdminPage() {
                         </option>
                       ))}
                     </select>
+                    {prize.fulfillmentType === "retry" && (
+                      <p className="mt-2 text-xs font-medium text-red-300">
+                        「安慰奖/未中」不会出现在首页奖池和抽奖滚轴，仅参与后台抽奖权重。
+                      </p>
+                    )}
+                    {prize.fulfillmentType !== "retry" && prize.fulfillmentType !== "none" && (
+                      <p className="mt-2 text-xs text-white/45">
+                        配件/实物、优惠券等会显示在首页奖池（已自动勾选「显示在奖池」）。
+                      </p>
+                    )}
                   </label>
 
                   <div className="sm:col-span-2 space-y-3">
@@ -597,15 +638,24 @@ export default function BlindBoxAdminPage() {
                   </label>
                   <label
                     className={`flex items-center gap-2 rounded-lg px-2 py-1 ${
-                      prize.showInPool ? "" : "border border-red-500/40 bg-red-500/10"
+                      prize.fulfillmentType !== "retry" || prize.showInPool
+                        ? ""
+                        : "border border-red-500/40 bg-red-500/10"
                     }`}
                   >
                     <input
                       type="checkbox"
-                      checked={prize.showInPool}
+                      checked={prize.fulfillmentType !== "retry" ? true : prize.showInPool}
+                      disabled={prize.fulfillmentType !== "retry"}
                       onChange={(e) => updatePrize(idx, { showInPool: e.target.checked })}
                     />
-                    <span className={prize.showInPool ? "text-white/70" : "font-semibold text-red-300"}>
+                    <span
+                      className={
+                        prize.fulfillmentType !== "retry" || prize.showInPool
+                          ? "text-white/70"
+                          : "font-semibold text-red-300"
+                      }
+                    >
                       显示在奖池（前台必勾）
                     </span>
                   </label>
@@ -618,18 +668,23 @@ export default function BlindBoxAdminPage() {
                     <span className="text-white/70">启用</span>
                   </label>
                 </div>
-                {!prize.showInPool && (
+                {prize.fulfillmentType === "retry" && !prize.showInPool && (
                   <p className="mt-2 text-xs font-medium text-red-300">
-                    ⚠ 未勾选「显示在奖池」，该礼品不会出现在首页奖池和抽奖滚轴里。
+                    ⚠ 安慰奖默认不显示在首页奖池（仅参与抽奖权重）。
+                  </p>
+                )}
+                {prize.fulfillmentType !== "retry" && (
+                  <p className="mt-2 text-xs text-emerald-400/80">
+                    非安慰奖礼品保存后会自动显示在首页奖池。
                   </p>
                 )}
 
                 <div className="mt-3">
                   <ImageUpload
                     label="礼品展示图（PNG/JPG，用于奖池 + 开箱滚轴）"
-                    hint="白底商品图默认自动抠透明底。纯白色产品（如白色耳机）若被抠坏，请取消勾选「自动去除白底」后重新上传。"
+                    hint="默认保留原图。白色耳机等可取消「自动去除白底」或勾选后上传；系统会铺白底避免变黑。"
                     enableCutout
-                    defaultCutout
+                    defaultCutout={false}
                     value={prize.imageUrl ?? ""}
                     onChange={(url) => void savePrizeImage(idx, url || null)}
                   />

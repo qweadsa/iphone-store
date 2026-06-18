@@ -50,10 +50,7 @@ export default function ImageUpload({
     }
   }
 
-  const previewBg =
-    enableCutout && cutout
-      ? "bg-[linear-gradient(45deg,#3a3a48_25%,transparent_25%),linear-gradient(-45deg,#3a3a48_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#3a3a48_75%),linear-gradient(-45deg,transparent_75%,#3a3a48_75%)] bg-[length:10px_10px] bg-[position:0_0,0_5px,5px_-5px,-5px_0px] bg-[#2a2a34]"
-      : "bg-[#1a1a24]";
+  const previewBg = "bg-white";
 
   return (
     <div>
@@ -66,7 +63,7 @@ export default function ImageUpload({
             checked={cutout}
             onChange={(e) => setCutout(e.target.checked)}
           />
-          <span className="text-white/70">自动去除白底（输出透明 PNG）</span>
+          <span className="text-white/70">自动去除白底（输出白底 PNG，适合深色前台）</span>
         </label>
       )}
       <div className="flex flex-wrap items-start gap-4">

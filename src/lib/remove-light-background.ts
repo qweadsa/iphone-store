@@ -146,6 +146,36 @@ function cleanupRim(data: Buffer, width: number, height: number) {
   }
 }
 
+/** 透明像素占比过高说明抠图误伤了产品主体 */
+function transparentRatio(data: Buffer): number {
+  const total = data.length / 4;
+  if (total === 0) return 0;
+  let transparent = 0;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 128) transparent++;
+  }
+  return transparent / total;
+}
+
+/** 可见产品像素过少说明主体被抠掉 */
+function opaqueRatio(data: Buffer): number {
+  const total = data.length / 4;
+  if (total === 0) return 0;
+  let opaque = 0;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] >= 128) opaque++;
+  }
+  return opaque / total;
+}
+
+/** 抠图失败时保留原图并铺白底（避免白色产品在深色背景上变黑） */
+async function flattenOnWhite(input: Buffer): Promise<Buffer> {
+  return sharp(input)
+    .flatten({ background: { r: 255, g: 255, b: 255 } })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
 export async function removeLightBackgroundFromBuffer(input: Buffer): Promise<Buffer> {
   const { data, info } = await sharp(input)
     .ensureAlpha()
@@ -157,11 +187,21 @@ export async function removeLightBackgroundFromBuffer(input: Buffer): Promise<Bu
   floodRemoveBackground(pixels, info.width, info.height);
   cleanupRim(pixels, info.width, info.height);
 
-  return sharp(pixels, {
+  const removedRatio = transparentRatio(pixels);
+  const keptRatio = opaqueRatio(pixels);
+  // 白色耳机/手机等容易被误抠 — 透明过多或主体过少则回退为白底原图
+  if (removedRatio > 0.45 || keptRatio < 0.12) {
+    return flattenOnWhite(input);
+  }
+
+  const cutout = await sharp(pixels, {
     raw: { width: info.width, height: info.height, channels: 4 },
   })
     .png({ compressionLevel: 9 })
     .toBuffer();
+
+  // 输出白底 PNG，前台深色主题下也能正常显示
+  return flattenOnWhite(cutout);
 }
 
 export function shouldRemoveLightBackground(ext: string): boolean {
