@@ -3,6 +3,7 @@
 import HeroGrandPrizeCard from "@/components/landing/HeroGrandPrizeCard";
 import LiveWinnerFeed, { type LiveWinnerItem } from "@/components/landing/LiveWinnerFeed";
 import type { GrandPrizeStatus } from "@/lib/blindbox-public";
+import type { HeroShowcaseFrame } from "@/lib/hero-iphone-cutouts";
 
 type StatCard = {
   n: string;
@@ -38,6 +39,7 @@ export default function HeroRewardPanel({
   statsCards,
   winnerItems,
   floatingChips,
+  heroFrames,
   showStats = true,
   statsDesktopOnly = false,
   labels,
@@ -55,6 +57,7 @@ export default function HeroRewardPanel({
           subtitle: labels.grandSubtitle,
           winBadge: labels.winBadge,
         }}
+        heroFrames={heroFrames}
       />
 
       {showStats && (

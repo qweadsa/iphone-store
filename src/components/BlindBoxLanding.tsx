@@ -18,6 +18,8 @@ import { displayPrizeName } from "@/lib/prize-display";
 import { getPrizeImageUrl } from "@/lib/prize-images";
 import PrizeVisual from "@/components/PrizeVisual";
 import { getPrizeDisplayOdds } from "@/lib/probability";
+import { resolveHeroShowcaseFrames } from "@/lib/hero-showcase";
+import type { HeroShowcaseEntry } from "@/lib/hero-showcase";
 import type { BlindBoxPrize } from "@/types/blindbox";
 import type { Product } from "@/types/product";
 
@@ -95,6 +97,7 @@ type Config = {
   heroTitle?: string;
   heroSubtitle?: string;
   grandPrizeImageUrl?: string | null;
+  heroShowcase?: HeroShowcaseEntry[];
   winnersDemoMode?: boolean;
 };
 
@@ -137,6 +140,11 @@ export default function BlindBoxLanding({
   );
   const featuredPrizes = visiblePrizes.slice(0, 2);
   const restPrizes = visiblePrizes.slice(2);
+
+  const heroFrames = useMemo(
+    () => resolveHeroShowcaseFrames(config.heroShowcase),
+    [config.heroShowcase],
+  );
 
   const grandStatusLabel =
     stats?.grandPrizeStatus === "claimed" ? l.grandClaimed : l.grandAvailable;
@@ -323,6 +331,7 @@ export default function BlindBoxLanding({
             statsCards={statsCards}
             winnerItems={winnerItems}
             floatingChips={floatingChips}
+            heroFrames={heroFrames}
             showStats
             statsDesktopOnly
             labels={panelLabels}

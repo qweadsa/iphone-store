@@ -1,13 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { HERO_CUTOUT_FRAMES } from "@/lib/hero-iphone-cutouts";
+import { HERO_CUTOUT_FRAMES, type HeroShowcaseFrame } from "@/lib/hero-iphone-cutouts";
 
 type Props = {
   alt: string;
+  frames?: HeroShowcaseFrame[];
 };
 
-export default function HeroIphoneShowcase({ alt }: Props) {
+function padShowcaseFrames(frames: HeroShowcaseFrame[]): HeroShowcaseFrame[] {
+  if (frames.length === 0) return HERO_CUTOUT_FRAMES;
+  if (frames.length >= 4) return frames.slice(0, 4);
+  const padded = [...frames];
+  while (padded.length < 4) {
+    padded.push(frames[padded.length % frames.length]);
+  }
+  return padded;
+}
+
+export default function HeroIphoneShowcase({ alt, frames }: Props) {
+  const displayFrames = padShowcaseFrames(frames?.length ? frames : HERO_CUTOUT_FRAMES);
+
   return (
     <div className="hero-phone-stage" role="img" aria-label={alt}>
       <div className="hero-phone-ambient" aria-hidden />
@@ -18,9 +31,9 @@ export default function HeroIphoneShowcase({ alt }: Props) {
       <div className="hero-phone-tilt">
         <div className="hero-phone-sway">
           <div className="hero-phone-stack">
-            {HERO_CUTOUT_FRAMES.map((frame, index) => (
+            {displayFrames.map((frame, index) => (
               <div
-                key={frame.src}
+                key={`${frame.src}-${index}`}
                 className={`hero-phone-frame hero-phone-frame-${index + 1}${frame.wide ? " hero-phone-frame-wide" : ""}`}
               >
                 <Image

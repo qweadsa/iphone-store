@@ -1,5 +1,6 @@
 import HeroIphoneShowcase from "@/components/landing/HeroIphoneShowcase";
 import type { GrandPrizeStatus } from "@/lib/blindbox-public";
+import type { HeroShowcaseFrame } from "@/lib/hero-iphone-cutouts";
 
 type Props = {
   name: string;
@@ -12,6 +13,7 @@ type Props = {
     winBadge: string;
   };
   floatingChips?: { label: string; emoji: string; className: string }[];
+  heroFrames?: HeroShowcaseFrame[];
 };
 
 export default function HeroGrandPrizeCard({
@@ -21,6 +23,7 @@ export default function HeroGrandPrizeCard({
   statusLabel,
   labels,
   floatingChips = [],
+  heroFrames,
 }: Props) {
   return (
     <div className="relative">
@@ -76,7 +79,7 @@ export default function HeroGrandPrizeCard({
             <div className="absolute right-0 top-0 z-20 rounded-full bg-gradient-to-r from-[#FF2D2D] to-[#FF7A00] px-3 py-1 text-[10px] font-black tracking-wider text-white shadow-lg">
               {labels.winBadge}
             </div>
-            <HeroIphoneShowcase alt={name} />
+            <HeroIphoneShowcase alt={name} frames={heroFrames} />
           </div>
         </div>
       </div>
