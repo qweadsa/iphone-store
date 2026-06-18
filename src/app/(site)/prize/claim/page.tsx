@@ -6,7 +6,10 @@ import { Suspense, useEffect, useState } from "react";
 import PrizeAddressForm from "@/components/PrizeAddressForm";
 import { useI18n } from "@/lib/i18n-context";
 import { useUser } from "@/lib/user-context";
-import type { GuestBlindboxRecord } from "@/lib/guest-order-lookup";
+import {
+  getPendingAddressClaims,
+  type PendingAddressClaim,
+} from "@/lib/guest-order-lookup";
 
 type ClaimInfo = {
   prizeName: string;
@@ -16,7 +19,7 @@ type ClaimInfo = {
 
 type LookupResponse = {
   email: string;
-  records: GuestBlindboxRecord[];
+  records: Parameters<typeof getPendingAddressClaims>[0];
 };
 
 function PrizeClaimForm() {
@@ -36,7 +39,7 @@ function PrizeClaimForm() {
   const [lookupEmail, setLookupEmail] = useState(emailParam || user?.email || "");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
-  const [pendingRecords, setPendingRecords] = useState<GuestBlindboxRecord[]>([]);
+  const [pendingRecords, setPendingRecords] = useState<PendingAddressClaim[]>([]);
   const [lookupDone, setLookupDone] = useState(false);
 
   useEffect(() => {
@@ -78,10 +81,7 @@ function PrizeClaimForm() {
       setLookupError(data.error ?? o.notFound);
       return;
     }
-    const pending = (data.records ?? []).filter(
-      (r): r is GuestBlindboxRecord =>
-        r.kind === "blindbox" && r.shippingStatus === "awaiting_address",
-    );
+    const pending = getPendingAddressClaims(data.records ?? []);
     setPendingRecords(pending);
     setLookupDone(true);
     if (pending.length === 0) {
@@ -175,7 +175,7 @@ function PrizeClaimForm() {
               <div className="mt-4">
                 <PrizeAddressForm
                   paymentId={record.paymentId}
-                  prizeName={record.prizeName ?? ""}
+                  prizeName={record.prizeName}
                   defaultEmail={lookupEmail}
                   onSuccess={() => void runEmailLookup(lookupEmail)}
                 />

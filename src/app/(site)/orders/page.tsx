@@ -21,6 +21,12 @@ function isBlindboxRecord(
   return record.kind === "blindbox";
 }
 
+function isShopOrderRecord(
+  record: GuestLookupRecord,
+): record is Extract<GuestLookupRecord, { kind: "order" }> {
+  return record.kind === "order";
+}
+
 function OrdersContent() {
   const searchParams = useSearchParams();
   const { messages: m } = useI18n();
@@ -84,7 +90,9 @@ function OrdersContent() {
   }
 
   const pendingAddressCount = records.filter(
-    (r) => isBlindboxRecord(r) && r.shippingStatus === "awaiting_address",
+    (r) =>
+      (isBlindboxRecord(r) && r.shippingStatus === "awaiting_address") ||
+      (isShopOrderRecord(r) && r.needsShippingAddress),
   ).length;
 
   return (
@@ -216,6 +224,18 @@ function OrdersContent() {
                   <span>{o.total}</span>
                   <span className="text-[#FFB800]">{formatPrice(record.total)}</span>
                 </div>
+
+                {record.needsShippingAddress && record.paymentId && record.prizeName && (
+                  <div className="mt-5 rounded-xl border border-[#FFB800]/25 bg-[#FFB800]/5 p-4">
+                    <p className="mb-3 text-sm font-semibold text-white">{o.fillAddressTitle}</p>
+                    <PrizeAddressForm
+                      paymentId={record.paymentId}
+                      prizeName={record.prizeName}
+                      defaultEmail={queriedEmail}
+                      onSuccess={() => void runLookup(queriedEmail)}
+                    />
+                  </div>
+                )}
               </div>
             ),
           )}

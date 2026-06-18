@@ -40,7 +40,10 @@ export function hasFixedMoneyCoupon(prizeName: string): boolean {
 }
 
 export function getPrizeFulfillment(prize: BlindBoxPrize): PrizeFulfillment {
-  const kind = prize.fulfillmentType ?? prize.key;
+  const configured = prize.fulfillmentType;
+  const kind =
+    configured && configured !== "none" ? configured : prize.key;
+
   switch (kind) {
     case "credit":
       return { type: "credit", amount: parseCreditAmount(prize.name) };
@@ -62,8 +65,38 @@ export function getPrizeFulfillment(prize: BlindBoxPrize): PrizeFulfillment {
     case "retry":
       return { type: "retry" };
     default:
-      return null;
+      if (/coupon/i.test(kind)) {
+        return getPrizeFulfillment({ ...prize, fulfillmentType: "coupon" });
+      }
+      if (/credit/i.test(kind)) {
+        return getPrizeFulfillment({ ...prize, fulfillmentType: "credit" });
+      }
+      return { type: "case" };
   }
+}
+
+export function prizeFromDraw(draw: {
+  prizeType: string;
+  prizeName: string;
+  fulfillmentType: string | null;
+}): BlindBoxPrize {
+  return {
+    key: draw.prizeType,
+    name: draw.prizeName,
+    weight: 0,
+    emoji: "🎁",
+    fulfillmentType: (draw.fulfillmentType ?? undefined) as BlindBoxPrize["fulfillmentType"],
+  };
+}
+
+export function drawNeedsShippingAddress(draw: {
+  prizeType: string;
+  prizeName: string;
+  fulfillmentType: string | null;
+  claimedAt: Date | null;
+}): boolean {
+  if (draw.claimedAt) return false;
+  return needsShippingClaim(getPrizeFulfillment(prizeFromDraw(draw)));
 }
 
 export function needsShippingClaim(fulfillment: PrizeFulfillment): boolean {
