@@ -1,0 +1,20 @@
+---
+description: After code changes for teumu.online, push to GitHub and deploy to production
+alwaysApply: true
+---
+
+# Auto deploy to teumu.online
+
+When you finish meaningful code changes for this project (unless the user says not to deploy):
+
+1. Commit and push to `origin main` on GitHub.
+2. Deploy to production by running:
+   `powershell -NoProfile -ExecutionPolicy Bypass -File deploy/push-and-deploy.ps1`
+   from the project root (requires network + SSH).
+
+Server: `root@160.30.4.98`, app dir `/var/www/iphone-store`, script `deploy/server-update.sh`.
+
+If SSH fails with `Permission denied`, tell the user to run once on the server:
+`bash deploy/install-deploy-key.sh`
+
+Do not skip deploy silently — report push/deploy result to the user.
