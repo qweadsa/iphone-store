@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
+import { getPaymentTransferRef } from "@/lib/payment-ref";
 
 export async function GET(req: Request) {
   try {
@@ -48,6 +49,7 @@ export async function GET(req: Request) {
     userId: p.userId,
     createdAt: p.createdAt.toISOString(),
     drawn: false as boolean,
+    transferRef: getPaymentTransferRef(p.paymentId, p.metadata),
   }));
 
   const paymentIds = payments.map((p) => p.paymentId);
@@ -81,6 +83,7 @@ export async function GET(req: Request) {
     userName: p.user?.name ?? null,
     userId: p.userId,
     createdAt: p.createdAt.toISOString(),
+    transferRef: getPaymentTransferRef(p.paymentId, p.metadata),
   }));
 
   return NextResponse.json({ payments, pendingCount, active, totalCount, limit });

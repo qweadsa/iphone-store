@@ -27,4 +27,5 @@ export type PaymentResult = {
   methodQrs?: Partial<Record<string, MethodQr>>;
   receiveNote?: string | null;
   requireAdminConfirm?: boolean;
+  transferRef?: string;
 };

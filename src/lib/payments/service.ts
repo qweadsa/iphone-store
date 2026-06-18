@@ -9,6 +9,7 @@ import {
 import { generateMethodQr, getReceiveSettings } from "./receive-qr";
 import { DEFAULT_CHECKOUT_METHOD } from "./methods";
 import { getPaymentRequireAdminConfirm } from "./settings";
+import { generateTransferRef } from "@/lib/payment-ref";
 import type { CreatePaymentInput, PaymentResult } from "./types";
 
 function siteUrl(): string {
@@ -54,6 +55,9 @@ export async function createPayment(
     }
   }
 
+  const transferRef = await allocateTransferRef();
+  const mergedMetadata = { ...(input.metadata ?? {}), transferRef };
+
   await prisma.payment.create({
     data: {
       paymentId,
@@ -61,7 +65,7 @@ export async function createPayment(
       email: payerEmail,
       amount: input.amount,
       purpose: input.purpose,
-      metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
+      metadata: mergedMetadata as Prisma.InputJsonValue,
       provider,
       externalId,
       payUrl,
@@ -91,7 +95,26 @@ export async function createPayment(
     methodQrs: { [DEFAULT_CHECKOUT_METHOD]: defaultMethodQr },
     receiveNote: receiveSettings.receiveNote,
     requireAdminConfirm,
+    transferRef,
   };
+}
+
+async function allocateTransferRef(): Promise<string> {
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const ref = generateTransferRef();
+    const recent = await prisma.payment.findMany({
+      where: { createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } },
+      select: { metadata: true },
+      take: 300,
+      orderBy: { createdAt: "desc" },
+    });
+    const taken = recent.some((row) => {
+      const meta = row.metadata as { transferRef?: string } | null;
+      return meta?.transferRef === ref;
+    });
+    if (!taken) return ref;
+  }
+  throw new Error("无法生成付款参考号");
 }
 
 export async function completePayment(

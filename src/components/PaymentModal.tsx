@@ -26,6 +26,7 @@ type PaymentData = {
   methodQrs?: Partial<Record<string, MethodQr>>;
   receiveNote?: string | null;
   requireAdminConfirm?: boolean;
+  transferRef?: string;
 };
 
 type PayPhase = "loading" | "balance_ok" | "balance_low" | "guest_qr";
@@ -300,7 +301,9 @@ export default function PaymentModal({
   const guestCanPay = !!user ? !!payment : !!payment && emailSaved;
   const waitingForGuestEmail = !user && !userLoading && !isValidGuestEmail(guestEmail);
   const preparingPayment = userLoading || payLoading || (!user && isValidGuestEmail(guestEmail) && !payment);
-  const transferRef = payment ? getPaymentTransferRef(payment.paymentId) : "";
+  const transferRef = payment
+    ? payment.transferRef ?? getPaymentTransferRef(payment.paymentId)
+    : "";
 
   async function copyTransferRef() {
     if (!transferRef) return;
@@ -590,14 +593,14 @@ function QrPanel({
           {formatPrice(amount)}
         </span>
       </div>
-      <div className="mt-4 flex justify-center">
+      <div className="payment-qr-wrap mt-3">
         <Image
           src={activeQr.qrDataUrl}
           alt={title}
-          width={280}
-          height={280}
-          className="h-auto w-full max-w-[280px] object-contain"
+          fill
+          className="payment-qr-image"
           unoptimized
+          sizes="300px"
         />
       </div>
 

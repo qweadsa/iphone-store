@@ -22,6 +22,7 @@ type PaymentRow = {
   userName: string | null;
   createdAt: string;
   drawn: boolean;
+  transferRef?: string;
 };
 
 const PURPOSE_LABEL: Record<string, string> = {
@@ -40,6 +41,7 @@ type ActivePayment = {
   userName: string | null;
   userId: number | null;
   createdAt: string;
+  transferRef?: string;
 };
 
 function PayerBadge({ row }: { row: { email: string | null; userName: string | null } }) {
@@ -246,7 +248,7 @@ export default function ReceiveSettingsPage() {
             </p>
           )}
           {activePaying.map((row) => {
-            const transferRef = getPaymentTransferRef(row.paymentId);
+            const transferRef = row.transferRef ?? getPaymentTransferRef(row.paymentId);
             return (
             <div
               key={row.paymentId}
@@ -322,7 +324,7 @@ export default function ReceiveSettingsPage() {
             </p>
           )}
           {payments.map((row) => {
-            const transferRef = getPaymentTransferRef(row.paymentId);
+            const transferRef = row.transferRef ?? getPaymentTransferRef(row.paymentId);
             return (
             <div
               key={row.paymentId}
