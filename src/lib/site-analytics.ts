@@ -16,6 +16,12 @@ export type TrafficStats = {
     referrer: string | null;
     createdAt: string;
   }[];
+  recentPagination: {
+    total: number;
+    page: number;
+    totalPages: number;
+    limit: number;
+  };
 };
 
 function startOfToday(): Date {
@@ -70,19 +76,28 @@ async function countPeriod(since: Date) {
   };
 }
 
-export async function getTrafficStats(): Promise<TrafficStats> {
+export async function getTrafficStats(options?: {
+  recentPage?: number;
+  recentLimit?: number;
+}): Promise<TrafficStats> {
+  const recentPage = options?.recentPage ?? 1;
+  const recentLimit = options?.recentLimit ?? 30;
+  const recentSkip = (recentPage - 1) * recentLimit;
+
   const settings = await prisma.siteSettings.findFirst({ where: { id: 1 } });
   const liveStartedAt = settings?.liveCountStartedAt ?? null;
   const todayStart = startOfToday();
   const lastHour = new Date(Date.now() - 60 * 60 * 1000);
 
-  const [today, lastHourStats, liveStats, recentRows] = await Promise.all([
+  const [today, lastHourStats, liveStats, recentTotal, recentRows] = await Promise.all([
     countPeriod(todayStart),
     countPeriod(lastHour),
     liveStartedAt ? countPeriod(liveStartedAt) : Promise.resolve({ visitors: 0, pageViews: 0 }),
+    prisma.siteVisit.count(),
     prisma.siteVisit.findMany({
       orderBy: { createdAt: "desc" },
-      take: 30,
+      skip: recentSkip,
+      take: recentLimit,
       select: { id: true, path: true, referrer: true, createdAt: true },
     }),
   ]);
@@ -102,6 +117,12 @@ export async function getTrafficStats(): Promise<TrafficStats> {
       referrer: r.referrer,
       createdAt: r.createdAt.toISOString(),
     })),
+    recentPagination: {
+      total: recentTotal,
+      page: recentPage,
+      totalPages: Math.max(1, Math.ceil(recentTotal / recentLimit)),
+      limit: recentLimit,
+    },
   };
 }
 

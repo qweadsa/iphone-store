@@ -23,14 +23,30 @@ export async function GET(req: Request) {
         : {}),
     };
 
-    const orders = await prisma.order.findMany({
-      where,
-      include: { items: true },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    });
+    const limitRaw = Number(searchParams.get("limit") ?? "30");
+    const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 10), 100) : 30;
+    const pageRaw = Number(searchParams.get("page") ?? "1");
+    const page = Number.isFinite(pageRaw) ? Math.max(1, Math.floor(pageRaw)) : 1;
+    const skip = (page - 1) * limit;
 
-    return NextResponse.json(orders);
+    const [totalCount, orders] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        include: { items: true },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return NextResponse.json({
+      orders,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(totalCount / limit)),
+    });
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHORIZED") {
       return NextResponse.json({ error: "未登录" }, { status: 401 });

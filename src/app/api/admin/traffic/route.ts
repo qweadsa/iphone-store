@@ -6,10 +6,14 @@ import {
   startLiveTrafficCount,
 } from "@/lib/site-analytics";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     await requireAdmin();
-    const stats = await getTrafficStats();
+    const { searchParams } = new URL(req.url);
+    const pageRaw = Number(searchParams.get("page") ?? "1");
+    const page = Number.isFinite(pageRaw) ? Math.max(1, Math.floor(pageRaw)) : 1;
+    const limit = 30;
+    const stats = await getTrafficStats({ recentPage: page, recentLimit: limit });
     return NextResponse.json(stats);
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHORIZED") {
