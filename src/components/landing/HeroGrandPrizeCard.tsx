@@ -4,7 +4,6 @@ import type { GrandPrizeStatus } from "@/lib/blindbox-public";
 type Props = {
   name: string;
   value: string;
-  imageUrl?: string | null;
   status: GrandPrizeStatus;
   statusLabel: string;
   labels: {
@@ -18,7 +17,6 @@ type Props = {
 export default function HeroGrandPrizeCard({
   name,
   value,
-  imageUrl,
   status,
   statusLabel,
   labels,

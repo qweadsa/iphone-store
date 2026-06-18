@@ -30,11 +30,11 @@ export async function saveImageToPublic(
   const dir = join(process.cwd(), "public", subdir);
   await mkdir(dir, { recursive: true });
 
-  let output = bytes;
+  let output: Buffer = bytes;
   let outputName = filename;
 
   if (options.removeLightBackground && shouldRemoveLightBackground(ext)) {
-    output = await removeLightBackgroundFromBuffer(bytes);
+    output = Buffer.from(await removeLightBackgroundFromBuffer(bytes));
     outputName = filename.replace(/\.[^.]+$/, ".png");
   }
 

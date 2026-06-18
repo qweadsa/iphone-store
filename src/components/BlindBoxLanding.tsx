@@ -230,7 +230,7 @@ export default function BlindBoxLanding({
   return (
     <div className="bg-[#03030A] pb-24 text-[#F5F5F7] md:pb-0">
       <MobileFixedCta
-        price={config.price}
+        fullPrice={config.price}
         priceLabel={l.perOpen}
         buttonLabel={l.fixedCtaBtn}
       />
@@ -315,7 +315,6 @@ export default function BlindBoxLanding({
           <HeroRewardPanel
             grandPrizeName={config.grandPrizeName}
             grandPrizeValue={config.grandPrizeValue}
-            grandPrizeImageUrl={config.grandPrizeImageUrl}
             grandPrizeStatus={stats?.grandPrizeStatus ?? "available"}
             grandStatusLabel={grandStatusLabel}
             statsCards={statsCards}

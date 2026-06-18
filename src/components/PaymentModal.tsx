@@ -8,7 +8,7 @@ import { useUser } from "@/lib/user-context";
 import { useI18n } from "@/lib/i18n-context";
 import type { PaymentPurpose } from "@/lib/payments/types";
 import type { MethodQr } from "@/lib/payments/types";
-import { CHECKOUT_METHODS, type PaymentMethodId } from "@/lib/payments/methods";
+import { CHECKOUT_METHODS, getMethodLabel, type PaymentMethodId } from "@/lib/payments/methods";
 import { getPaymentTransferRef } from "@/lib/payment-ref";
 import PaymentMethodIcon from "./PaymentMethodIcon";
 
@@ -83,14 +83,18 @@ export default function PaymentModal({
   }, [payLoading, userLoading, user, amount, purpose]);
 
   const methodLabel = (id: PaymentMethodId) => {
-    const labels: Record<PaymentMethodId, string> = {
+    const labels: Partial<Record<PaymentMethodId, string>> = {
       visa: p.methodVisa,
       paypal: p.methodPayPal,
       crypto: p.methodCrypto,
       balance: p.balance,
       qr: p.qr,
+      duitnow: p.methodDuitNow,
+      tng: p.methodTng,
+      grabpay: p.methodGrabPay,
+      shopeepay: p.methodShopeePay,
     };
-    return labels[id] ?? id;
+    return labels[id] ?? getMethodLabel(id);
   };
 
   const selectedLabel = methodLabel(selected);

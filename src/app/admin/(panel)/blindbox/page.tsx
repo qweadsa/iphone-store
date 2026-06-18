@@ -82,7 +82,7 @@ function normalizePrizeForSave(prize: Prize): Prize {
 }
 
 function normalizePrize(raw: Record<string, unknown>): Prize {
-  return {
+  const prize: Prize = {
     id: Number(raw.id),
     name: String(raw.name ?? ""),
     prizeType: String(raw.prizeType ?? raw.prize_type ?? ""),
