@@ -20,7 +20,11 @@ function internalTrackVisitUrl(request: NextRequest): string {
   return new URL("/api/internal/track-visit", request.url).toString();
 }
 
-function queueVisitTrack(event: NextFetchEvent, request: NextRequest, visitorId: string) {
+function queueVisitTrack(
+  event: NextFetchEvent,
+  request: NextRequest,
+  persistedVisitorId: string | null,
+) {
   const secret = getSessionSecret();
   const path = request.nextUrl.pathname + request.nextUrl.search;
   event.waitUntil(
@@ -35,7 +39,7 @@ function queueVisitTrack(event: NextFetchEvent, request: NextRequest, visitorId:
         referer: request.headers.get("referer") ?? "",
         host: request.headers.get("host") ?? "",
       },
-      body: JSON.stringify({ path, visitorId }),
+      body: JSON.stringify({ path, persistedVisitorId }),
     }).catch(() => undefined),
   );
 }
@@ -77,18 +81,16 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   if (!pathname.startsWith("/admin")) {
     const res = withSecurityHeaders(NextResponse.next());
     if (shouldTrackVisit(pathname)) {
-      let visitorId = request.cookies.get(VISITOR_COOKIE)?.value;
-      if (!visitorId) {
-        visitorId = crypto.randomUUID();
-        res.cookies.set(VISITOR_COOKIE, visitorId, {
-          maxAge: 60 * 60 * 24 * 30,
-          httpOnly: true,
-          sameSite: "lax",
-          path: "/",
-          secure: isProduction(),
-        });
-      }
-      queueVisitTrack(event, request, visitorId);
+      const persistedVisitorId = request.cookies.get(VISITOR_COOKIE)?.value ?? null;
+      const visitorId = persistedVisitorId ?? crypto.randomUUID();
+      res.cookies.set(VISITOR_COOKIE, visitorId, {
+        maxAge: 60 * 60 * 24 * 30,
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProduction(),
+      });
+      queueVisitTrack(event, request, persistedVisitorId);
     }
     return res;
   }

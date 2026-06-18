@@ -141,8 +141,9 @@ export default function TrafficDashboard() {
             <h2 className="text-lg font-bold text-amber-300">每日访问（自动统计）</h2>
             <p className="mt-1 max-w-2xl text-sm text-white/60">
               只要有人打开首页、产品页等前台页面，就会自动记入「今日累计」和下方列表。
-              后台页面、图片资源不计入。请用另一台设备或手机无痕模式访问{" "}
-              <span className="font-mono text-amber-200/90">teumu.online</span> 测试。
+              后台页面、图片资源不计入。同一浏览器反复刷新只增加「浏览次数」，独立访客不会重复累加。
+              测试新访客请用另一台设备或手机无痕模式访问{" "}
+              <span className="font-mono text-amber-200/90">teumu.online</span>。
             </p>
           </div>
           {lastUpdated && (

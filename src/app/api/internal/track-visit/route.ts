@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  let body: { path?: string; visitorId?: string };
+  let body: { path?: string; persistedVisitorId?: string | null };
   try {
     body = await req.json();
   } catch {
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   try {
     await recordSiteVisit({
       visitorHash: buildVisitorKey({
-        visitorId: body.visitorId,
+        persistedVisitorId: body.persistedVisitorId,
         ip,
         userAgent,
       }),

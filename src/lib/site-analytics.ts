@@ -35,14 +35,19 @@ export function hashVisitorKey(raw: string): string {
 }
 
 export function buildVisitorKey(input: {
-  visitorId?: string | null;
+  /** Cookie already stored in the browser — stable across refreshes */
+  persistedVisitorId?: string | null;
   ip?: string | null;
   userAgent?: string | null;
 }): string {
-  const base =
-    input.visitorId?.trim() ||
-    `${input.ip?.trim() || "unknown"}|${input.userAgent?.trim() || "unknown"}`;
-  return hashVisitorKey(base);
+  const persisted = input.persistedVisitorId?.trim();
+  if (persisted) {
+    return hashVisitorKey(`vid:${persisted}`);
+  }
+  // Cookie missing or first visit: fingerprint by IP + browser so refreshes don't inflate counts
+  return hashVisitorKey(
+    `fp:${input.ip?.trim() || "unknown"}|${input.userAgent?.trim() || "unknown"}`,
+  );
 }
 
 export async function recordSiteVisit(input: {
