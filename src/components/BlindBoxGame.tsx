@@ -79,12 +79,15 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
     ? `/login?next=${encodeURIComponent("/account")}&claimPayment=${encodeURIComponent(drawPaymentId)}`
     : "/login?next=%2Faccount";
 
-  const trackOrderHref =
-    orderNumber && orderEmail
-      ? `/orders?orderNumber=${encodeURIComponent(orderNumber)}&email=${encodeURIComponent(orderEmail)}`
-      : orderNumber
-        ? `/orders?orderNumber=${encodeURIComponent(orderNumber)}`
-        : "/orders";
+  const trackOrderHref = orderEmail
+    ? `/orders?email=${encodeURIComponent(orderEmail)}`
+    : "/orders";
+
+  const claimAddressHref = drawPaymentId
+    ? `/prize/claim?paymentId=${encodeURIComponent(drawPaymentId)}`
+    : orderEmail
+      ? `/prize/claim?email=${encodeURIComponent(orderEmail)}`
+      : "/prize/claim";
 
   const handleSpinComplete = useCallback(() => {
     setPhase("done");
@@ -203,6 +206,8 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
 
   const isCreditWin = phase === "done" && fulfillment?.type === "credit";
   const isRetryWin = phase === "done" && fulfillment?.type === "retry";
+  const isShippingWin =
+    phase === "done" && needsShipping && !showOrderReceipt && !isRetryWin;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-6 md:py-12">
@@ -243,13 +248,31 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
               {a.couponWon}: <span className="font-mono font-bold">{fulfillment.code}</span>
             </p>
           )}
+          {isShippingWin && (
+            <p className="mt-3 text-sm font-medium text-amber-300">{b.shippingPrizeHint}</p>
+          )}
         </div>
       )}
 
       {drawError && <p className="mt-4 text-center text-sm text-red-500">{drawError}</p>}
 
       <div className="mt-8 flex flex-col items-center gap-3">
-        {isCreditWin && !credited && !showOrderReceipt ? (
+        {isShippingWin ? (
+          <>
+            <Link
+              href={claimAddressHref}
+              className="cta-breathe w-full max-w-md rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-10 py-4 text-center text-sm font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)] transition hover:scale-105 sm:w-auto"
+            >
+              {b.fillAddressBtn}
+            </Link>
+            <Link
+              href={trackOrderHref}
+              className="text-sm text-white/50 transition hover:text-white/80"
+            >
+              {b.fillAddressLater}
+            </Link>
+          </>
+        ) : isCreditWin && !credited && !showOrderReceipt ? (
           <Link
             href={loginHref}
             className="cta-breathe w-full max-w-md rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-10 py-4 text-center text-sm font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)] transition hover:scale-105 sm:w-auto"
@@ -266,6 +289,7 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
         ) : null}
 
         {!isCreditWin || credited ? (
+          !isShippingWin ? (
           <button
             onClick={handleDrawClick}
             disabled={phase === "spinning" || fetching || showOrderReceipt}
@@ -279,6 +303,7 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
               ? injectConfigPrice(b.tryAgainBtn, checkout.cashDue, locale)
               : injectConfigPrice(b.drawNow, checkout.cashDue, locale)}
           </button>
+          ) : null
         ) : null}
       </div>
 
@@ -304,7 +329,9 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
           <div className="w-full max-w-md rounded-2xl border border-[#FFB800]/30 bg-[#0a0a12] p-8 text-center shadow-[0_24px_80px_rgba(255,184,0,0.15)]">
             <p className="text-5xl">🎫</p>
             <h2 className="mt-4 text-2xl font-bold text-white">{b.drawOrderTitle}</h2>
-            <p className="mt-2 text-sm text-white/60">{b.drawOrderDesc}</p>
+            <p className="mt-2 text-sm text-white/60">
+              {needsShipping ? b.drawOrderShippingDesc : b.drawOrderDesc}
+            </p>
             <p className="mt-5 rounded-xl border border-[#FFB800]/25 bg-[#FFB800]/10 px-4 py-3 font-mono text-xl font-bold tracking-wide text-[#FFB800]">
               {orderNumber}
             </p>
@@ -314,20 +341,41 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
               </p>
             )}
             <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => finishOrderReceipt(false)}
-                className="flex-1 rounded-full border border-white/20 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                {b.orderDismiss}
-              </button>
-              <button
-                type="button"
-                onClick={() => finishOrderReceipt(true)}
-                className="flex-1 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FF7A00] py-3 text-sm font-bold text-[#03030A]"
-              >
-                {b.trackOrder}
-              </button>
+              {needsShipping ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => finishOrderReceipt(true)}
+                    className="flex-1 rounded-full border border-white/20 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    {b.fillAddressLater}
+                  </button>
+                  <Link
+                    href={claimAddressHref}
+                    onClick={() => setShowOrderReceipt(false)}
+                    className="flex-1 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FF7A00] py-3 text-center text-sm font-bold text-[#03030A]"
+                  >
+                    {b.fillAddressBtn}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => finishOrderReceipt(false)}
+                    className="flex-1 rounded-full border border-white/20 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    {b.orderDismiss}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => finishOrderReceipt(true)}
+                    className="flex-1 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FF7A00] py-3 text-sm font-bold text-[#03030A]"
+                  >
+                    {b.trackOrder}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

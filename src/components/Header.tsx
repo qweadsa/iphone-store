@@ -87,6 +87,7 @@ export default function Header() {
     { href: "/#draw", label: m.nav.blindBox, highlight: true },
     { href: "/products", label: m.nav.shop },
     { href: "/orders", label: m.nav.orders },
+    { href: "/prize/claim", label: m.nav.claimPrize },
   ];
 
   const userLabel = user?.name?.trim() || user?.email?.split("@")[0] || m.nav.login;

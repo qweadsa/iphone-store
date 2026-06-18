@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import PrizeAddressForm from "@/components/PrizeAddressForm";
 import { useI18n } from "@/lib/i18n-context";
 import { useUser } from "@/lib/user-context";
+import type { GuestBlindboxRecord } from "@/lib/guest-order-lookup";
 
 type ClaimInfo = {
   prizeName: string;
@@ -12,44 +14,38 @@ type ClaimInfo = {
   claimed: boolean;
 };
 
+type LookupResponse = {
+  email: string;
+  records: GuestBlindboxRecord[];
+};
+
 function PrizeClaimForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("paymentId")?.trim() ?? "";
+  const emailParam = searchParams.get("email")?.trim() ?? "";
   const { messages: m } = useI18n();
   const c = m.prizeClaim;
+  const o = m.orders;
   const { user } = useUser();
 
   const [info, setInfo] = useState<ClaimInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(!!paymentId);
   const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
 
-  const [name, setName] = useState(user?.name ?? "");
-  const [email, setEmail] = useState(user?.email ?? "");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zip, setZip] = useState("");
+  const [lookupEmail, setLookupEmail] = useState(emailParam || user?.email || "");
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState("");
+  const [pendingRecords, setPendingRecords] = useState<GuestBlindboxRecord[]>([]);
+  const [lookupDone, setLookupDone] = useState(false);
 
   useEffect(() => {
-    if (user?.name) setName(user.name);
-    if (user?.email) setEmail(user.email);
-  }, [user]);
-
-  useEffect(() => {
-    if (!paymentId) {
-      setLoading(false);
-      return;
-    }
+    if (!paymentId) return;
     fetch(`/api/blindbox/claim?paymentId=${encodeURIComponent(paymentId)}`)
       .then(async (r) => {
         const data = await r.json();
         if (!r.ok) throw new Error(data.error ?? "Failed");
         setInfo(data);
-        if (data.claimed) setDone(true);
         if (!data.needsShipping) {
           router.replace("/");
         }
@@ -58,50 +54,88 @@ function PrizeClaimForm() {
       .finally(() => setLoading(false));
   }, [paymentId, router, c.loadFailed]);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
-    const res = await fetch("/api/blindbox/claim", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentId, name, email, phone, address, city, state, zip }),
-    });
-    const data = await res.json();
-    setSubmitting(false);
-    if (!res.ok) {
-      setError(data.error ?? c.submitFailed);
+  useEffect(() => {
+    if (paymentId || !emailParam) return;
+    void runEmailLookup(emailParam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailParam, paymentId]);
+
+  async function runEmailLookup(em: string) {
+    const mail = em.trim();
+    if (!mail) {
+      setLookupError(o.fillEmail);
       return;
     }
-    setDone(true);
-  }
-
-  if (!paymentId) {
-    return (
-      <div className="mx-auto max-w-md px-6 py-16 text-center">
-        <p className="text-[var(--color-muted)]">{c.missingPayment}</p>
-        <Link href="/" className="site-btn mt-6 inline-block">
-          {c.backHome}
-        </Link>
-      </div>
+    setLookupLoading(true);
+    setLookupError("");
+    setPendingRecords([]);
+    setLookupDone(false);
+    const params = new URLSearchParams({ email: mail });
+    const res = await fetch(`/api/orders?${params}`);
+    const data = (await res.json()) as LookupResponse & { error?: string };
+    setLookupLoading(false);
+    if (!res.ok) {
+      setLookupError(data.error ?? o.notFound);
+      return;
+    }
+    const pending = (data.records ?? []).filter(
+      (r): r is GuestBlindboxRecord =>
+        r.kind === "blindbox" && r.shippingStatus === "awaiting_address",
     );
+    setPendingRecords(pending);
+    setLookupDone(true);
+    if (pending.length === 0) {
+      setLookupError(c.noPendingAddress);
+    }
   }
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-md px-6 py-16 text-center text-[var(--color-muted)]">
-        {c.loading}
-      </div>
-    );
-  }
+  if (paymentId) {
+    if (loading) {
+      return (
+        <div className="mx-auto max-w-md px-6 py-16 text-center text-[var(--color-muted)]">
+          {c.loading}
+        </div>
+      );
+    }
 
-  if (error && !info) {
+    if (error && !info) {
+      return (
+        <div className="mx-auto max-w-md px-6 py-16 text-center">
+          <p className="text-red-400">{error}</p>
+          <Link href="/prize/claim" className="site-btn mt-6 inline-block">
+            {c.lookupByEmail}
+          </Link>
+        </div>
+      );
+    }
+
+    if (info?.claimed) {
+      return (
+        <div className="mx-auto max-w-lg px-6 py-16 text-center">
+          <p className="text-lg font-semibold text-emerald-400">{c.successTitle}</p>
+          <p className="mt-2 text-sm text-[var(--color-muted)]">{c.successDesc}</p>
+          <Link href="/orders" className="site-btn mt-6 inline-block">
+            {o.title}
+          </Link>
+        </div>
+      );
+    }
+
     return (
-      <div className="mx-auto max-w-md px-6 py-16 text-center">
-        <p className="text-red-400">{error}</p>
-        <Link href="/" className="site-btn mt-6 inline-block">
-          {c.backHome}
-        </Link>
+      <div className="mx-auto max-w-lg px-6 py-16">
+        <h1 className="text-3xl font-bold">{c.title}</h1>
+        <p className="mt-2 text-[var(--color-muted)]">{c.subtitle}</p>
+        <div className="mt-6 site-card bg-gradient-to-br from-[#FFB800]/15 to-[#FF7A00]/10 p-5">
+          <p className="text-sm text-[var(--color-muted)]">{c.prizeLabel}</p>
+          <p className="mt-1 text-xl font-bold text-[#FFB800]">{info?.prizeName}</p>
+        </div>
+        <div className="mt-8">
+          <PrizeAddressForm
+            paymentId={paymentId}
+            prizeName={info?.prizeName ?? ""}
+            defaultEmail={user?.email ?? ""}
+          />
+        </div>
       </div>
     );
   }
@@ -109,78 +143,53 @@ function PrizeClaimForm() {
   return (
     <div className="mx-auto max-w-lg px-6 py-16">
       <h1 className="text-3xl font-bold">{c.title}</h1>
-      <p className="mt-2 text-[var(--color-muted)]">{c.subtitle}</p>
+      <p className="mt-2 text-[var(--color-muted)]">{c.lookupSubtitle}</p>
 
-      <div className="mt-6 site-card bg-gradient-to-br from-[#FFB800]/15 to-[#FF7A00]/10 p-5">
-        <p className="text-sm text-[var(--color-muted)]">{c.prizeLabel}</p>
-        <p className="mt-1 text-xl font-bold text-[#FFB800]">{info?.prizeName}</p>
+      <div className="mt-8 space-y-3">
+        <input
+          type="email"
+          value={lookupEmail}
+          onChange={(e) => setLookupEmail(e.target.value)}
+          placeholder={c.email}
+          className="site-input"
+        />
+        <button
+          onClick={() => void runEmailLookup(lookupEmail)}
+          disabled={lookupLoading}
+          className="site-btn w-full disabled:opacity-50"
+        >
+          {lookupLoading ? c.searching : c.searchBtn}
+        </button>
       </div>
 
-      {done ? (
-        <div className="mt-8 text-center">
-          <p className="text-lg font-semibold text-emerald-400">{c.successTitle}</p>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">{c.successDesc}</p>
-          <Link href="/" className="site-btn mt-6 inline-block">
-            {c.backHome}
-          </Link>
-        </div>
-      ) : (
-        <form onSubmit={submit} className="mt-8 space-y-4">
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={c.name}
-            className="site-input"
-          />
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={c.email}
-            className="site-input"
-          />
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder={c.phone}
-            className="site-input"
-          />
-          <textarea
-            required
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder={c.address}
-            rows={3}
-            className="site-input"
-          />
-          <div className="grid gap-4 sm:grid-cols-3">
-            <input
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder={c.city}
-              className="site-input"
-            />
-            <input
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              placeholder={c.state}
-              className="site-input"
-            />
-            <input
-              value={zip}
-              onChange={(e) => setZip(e.target.value)}
-              placeholder={c.zip}
-              className="site-input"
-            />
-          </div>
-          <button type="submit" disabled={submitting} className="site-btn w-full disabled:opacity-50">
-            {submitting ? c.submitting : c.submitBtn}
-          </button>
-        </form>
+      {lookupError && (
+        <p className="mt-4 text-sm text-red-400">{lookupError}</p>
       )}
+
+      {lookupDone && pendingRecords.length > 0 && (
+        <div className="mt-8 space-y-4">
+          {pendingRecords.map((record) => (
+            <div key={record.paymentId} className="site-card p-5">
+              <p className="text-sm text-[var(--color-muted)]">{c.prizeLabel}</p>
+              <p className="mt-1 text-lg font-bold text-[#FFB800]">{record.prizeName}</p>
+              <div className="mt-4">
+                <PrizeAddressForm
+                  paymentId={record.paymentId}
+                  prizeName={record.prizeName ?? ""}
+                  defaultEmail={lookupEmail}
+                  onSuccess={() => void runEmailLookup(lookupEmail)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className="mt-8 text-center text-sm text-[var(--color-muted)]">
+        <Link href="/orders" className="text-[#FFB800] hover:underline">
+          {c.goOrders}
+        </Link>
+      </p>
     </div>
   );
 }

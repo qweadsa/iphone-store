@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isDatabaseConfigured, prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/orders";
-import { findGuestBlindboxPayment } from "@/lib/guest-order-lookup";
+import { findGuestRecordsByEmail } from "@/lib/guest-order-lookup";
 
 type OrderItemInput = {
   productId: string;
@@ -94,28 +94,20 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
-  const orderNumber = searchParams.get("orderNumber")?.trim();
   const email = searchParams.get("email")?.trim().toLowerCase();
 
-  if (!orderNumber || !email) {
-    return NextResponse.json({ error: "请输入订单号和邮箱" }, { status: 400 });
+  if (!email) {
+    return NextResponse.json({ error: "请输入邮箱" }, { status: 400 });
   }
 
   try {
-    const order = await prisma.order.findFirst({
-      where: { orderNumber, email },
-      include: { items: true },
-    });
+    const records = await findGuestRecordsByEmail(email);
 
-    if (!order) {
-      const blindbox = await findGuestBlindboxPayment(orderNumber, email);
-      if (blindbox) {
-        return NextResponse.json(blindbox);
-      }
-      return NextResponse.json({ error: "未找到订单" }, { status: 404 });
+    if (records.length === 0) {
+      return NextResponse.json({ error: "未找到与该邮箱相关的订单或抽奖记录" }, { status: 404 });
     }
 
-    return NextResponse.json({ kind: "order", ...order });
+    return NextResponse.json({ email, records });
   } catch {
     return NextResponse.json({ error: "查询失败" }, { status: 500 });
   }
