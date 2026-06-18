@@ -19,6 +19,7 @@ type Props = {
   statsCards: StatCard[];
   winnerItems: LiveWinnerItem[];
   floatingChips: { label: string; emoji: string; className: string }[];
+  heroFrames?: HeroShowcaseFrame[];
   showStats?: boolean;
   statsDesktopOnly?: boolean;
   labels: {
