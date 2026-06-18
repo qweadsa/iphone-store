@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatPrice } from "@/lib/products";
+import {
+  formatAdminPrice,
+  MARKET_CURRENCY_SYMBOL,
+  RECHARGE_MAX,
+  RECHARGE_MIN,
+  RECHARGE_QUICK_AMOUNTS,
+} from "@/lib/market";
 import { useUser } from "@/lib/user-context";
 import { useI18n } from "@/lib/i18n-context";
 import PaymentModal from "@/components/PaymentModal";
-
-const QUICK_AMOUNTS = [20, 50, 100, 200];
-const MIN_RECHARGE = 5;
-const MAX_RECHARGE = 10000;
 
 type WalletTxn = {
   id: number;
@@ -32,7 +35,7 @@ export default function AccountPage() {
   const a = m.auth;
   const p = m.payment;
 
-  const [customAmount, setCustomAmount] = useState("50");
+  const [customAmount, setCustomAmount] = useState(String(RECHARGE_QUICK_AMOUNTS[1] ?? 50));
   const [rechargeAmount, setRechargeAmount] = useState<number | null>(null);
   const [rechargeError, setRechargeError] = useState("");
   const [txns, setTxns] = useState<WalletTxn[]>([]);
@@ -52,7 +55,7 @@ export default function AccountPage() {
     const value = Number((raw ?? customAmount).replace(/,/g, "").trim());
     if (!Number.isFinite(value)) return null;
     const rounded = Math.round(value * 100) / 100;
-    if (rounded < MIN_RECHARGE || rounded > MAX_RECHARGE) return null;
+    if (rounded < RECHARGE_MIN || rounded > RECHARGE_MAX) return null;
     return rounded;
   }
 
@@ -112,7 +115,7 @@ export default function AccountPage() {
       <p className="mt-1 text-sm text-[var(--color-muted)]">{a.rechargeDesc}</p>
 
       <div className="mt-4 grid grid-cols-4 gap-2">
-        {QUICK_AMOUNTS.map((amt) => (
+        {RECHARGE_QUICK_AMOUNTS.map((amt) => (
           <button
             key={amt}
             type="button"
@@ -126,7 +129,7 @@ export default function AccountPage() {
                 : "border-white/10 bg-white/[0.04] hover:border-[#FFB800]/40 hover:bg-[#FFB800]/10"
             }`}
           >
-            ${amt}
+            {formatAdminPrice(amt)}
           </button>
         ))}
       </div>
@@ -137,13 +140,13 @@ export default function AccountPage() {
         </label>
         <div className="mt-2 flex gap-2">
           <div className="relative min-w-0 flex-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
-              $
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-white/40">
+              {MARKET_CURRENCY_SYMBOL}
             </span>
             <input
               type="number"
-              min={MIN_RECHARGE}
-              max={MAX_RECHARGE}
+              min={RECHARGE_MIN}
+              max={RECHARGE_MAX}
               step="0.01"
               value={customAmount}
               onChange={(e) => {
@@ -154,7 +157,7 @@ export default function AccountPage() {
                 if (e.key === "Enter") startRecharge();
               }}
               placeholder="50.00"
-              className="site-input w-full pl-7"
+              className="site-input w-full pl-10"
             />
           </div>
           <button

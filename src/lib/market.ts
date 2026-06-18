@@ -10,6 +10,10 @@ export const MARKET_CURRENCY_SYMBOL = market.currencySymbol;
 export const DEFAULT_BLIND_BOX_PRICE = 59;
 export const DEFAULT_GRAND_PRIZE_VALUE = `${MARKET_CURRENCY_SYMBOL}5,999`;
 
+export const RECHARGE_MIN = market.rechargeMin ?? 20;
+export const RECHARGE_MAX = market.rechargeMax ?? 40000;
+export const RECHARGE_QUICK_AMOUNTS = market.rechargeQuickAmounts ?? [20, 50, 100, 200];
+
 const LEGACY_USD_REPLACEMENTS: [RegExp, string][] = [
   [/\$1,?199(?:\.00)?/g, DEFAULT_GRAND_PRIZE_VALUE],
   [/\$60\b/g, `${MARKET_CURRENCY_SYMBOL}59`],

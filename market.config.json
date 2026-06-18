@@ -4,5 +4,8 @@
   "defaultLocale": "ms",
   "currency": "MYR",
   "currencySymbol": "RM",
+  "rechargeMin": 20,
+  "rechargeMax": 40000,
+  "rechargeQuickAmounts": [20, 50, 100, 200],
   "note": "马来西亚本地版 — 默认 Bahasa Melayu，收款面向本地银行与电子钱包。"
 }
