@@ -25,7 +25,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0f1117] text-white">
+    <div className="admin-shell flex min-h-screen bg-[#0f1117] text-white [color-scheme:dark]">
       <aside className="flex w-56 shrink-0 flex-col border-r border-white/10 bg-[#0a0c10]">
         <div className="border-b border-white/10 p-5">
           <p className="text-lg font-bold">🎁 管理后台</p>
