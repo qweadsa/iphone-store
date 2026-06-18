@@ -19,4 +19,8 @@ Write-Host "==> deploy on $user@$hostName"
 ssh -i $key -o BatchMode=yes -o StrictHostKeyChecking=accept-new "${user}@${hostName}" `
   "cd /var/www/iphone-store && sudo bash deploy/server-update.sh"
 
+if ($LASTEXITCODE -ne 0) {
+  Write-Error "SSH deploy failed (exit $LASTEXITCODE). Run once on server: bash deploy/install-deploy-key.sh"
+}
+
 Write-Host "==> done"
