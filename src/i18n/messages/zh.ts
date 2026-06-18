@@ -407,7 +407,7 @@ export const zh: Messages = {
     duitnowSecuredFooter: "PayNet 安全支付 · FPX · 马来西亚",
   },
   footer: {
-    tagline: "值得信赖的 iPhone 商城，正品速达。",
+    tagline: "马来西亚值得信赖的 iPhone 商城，正品保障，全国包邮。",
     help: "购物帮助",
     helpItems: ["免费配送", "14 天退换", "1 年保修"],
     contact: "联系我们",

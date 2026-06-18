@@ -411,7 +411,7 @@ export const ms = {
     duitnowSecuredFooter: "Dijamin selamat · PayNet · FPX · Malaysia",
   },
   footer: {
-    tagline: "Menangi iPhone 17 Pro Max. Penghantaran percuma di seluruh Malaysia.",
+    tagline: "Kedai iPhone dipercayai di Malaysia. Peranti asli, penghantaran percuma.",
     help: "Bantuan Membeli-belah",
     helpItems: ["Penghantaran Percuma", "Pulangan 14 Hari", "Waranti 1 Tahun"],
     contact: "Hubungi Kami",

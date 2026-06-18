@@ -413,7 +413,7 @@ export const en = {
     duitnowSecuredFooter: "Secured by PayNet · FPX · Malaysia",
   },
   footer: {
-    tagline: "Your trusted iPhone store. Authentic devices, delivered fast.",
+    tagline: "Your trusted iPhone store in Malaysia. Authentic devices, free nationwide shipping.",
     help: "Shopping Help",
     helpItems: ["Free Shipping", "14-Day Returns", "1-Year Warranty"],
     contact: "Contact Us",
