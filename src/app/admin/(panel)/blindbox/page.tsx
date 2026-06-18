@@ -362,7 +362,7 @@ export default function BlindBoxAdminPage() {
           <h2 className="font-semibold">盲盒设置</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="text-white/70">抽奖价格 (RM)</span>
+              <span className="text-white/70">抽奖价格（马币 RM）</span>
               <input
                 type="number"
                 value={config.price}

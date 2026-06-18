@@ -7,7 +7,7 @@ export const blindBoxConfig = defineType({
   fields: [
     defineField({
       name: "price",
-      title: "抽奖价格 (USD)",
+      title: "抽奖价格 (RM)",
       type: "number",
       initialValue: 60,
       validation: (r) => r.required(),
