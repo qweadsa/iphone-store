@@ -1,5 +1,3 @@
-import { contentLang } from "@/lib/locale-resolve";
-
 export function calcProbability(weight: number, total: number): string {
   if (total === 0) return "0%";
   return `${((weight / total) * 100).toFixed(weight < 1 ? 2 : 1)}%`;
@@ -13,7 +11,7 @@ export function getPrizeDisplayOdds(
     drawable?: boolean;
   },
   drawWeight: number,
-  locale: string = "ms",
+  locale: "zh" | "en" = "zh",
 ): string {
   const custom = prize.displayOdds?.trim();
   if (custom) return custom;
@@ -22,10 +20,7 @@ export function getPrizeDisplayOdds(
     return calcProbability(prize.weight, drawWeight);
   }
 
-  const lang = contentLang(locale);
-  if (lang === "zh") return "展示";
-  if (lang === "ms") return "Paparan";
-  return "Display";
+  return locale === "zh" ? "展示" : "Display";
 }
 
 /** 后台真实抽奖概率（仅按权重计算） */

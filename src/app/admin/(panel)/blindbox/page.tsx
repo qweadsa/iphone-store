@@ -1,18 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import HeroShowcaseEditor from "@/components/admin/HeroShowcaseEditor";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ImageUpload from "@/components/admin/ImageUpload";
-import type { HeroShowcaseEntry } from "@/lib/hero-showcase";
 import { getPrizeRealOdds } from "@/lib/probability";
-import {
-  DEFAULT_BLIND_BOX_PRICE,
-  DEFAULT_GRAND_PRIZE_VALUE,
-  DEFAULT_HERO_SUBTITLE,
-  formatAdminPrice,
-  MARKET_CURRENCY,
-} from "@/lib/market";
-import { DEFAULT_DEMO_WINNERS, type DemoWinnerEntry } from "@/lib/demo-winners";
 
 type Prize = {
   id: number;
@@ -39,15 +29,10 @@ type Config = {
   heroTitle: string | null;
   heroSubtitle: string | null;
   grandPrizeImageUrl: string | null;
-  heroShowcase?: HeroShowcaseEntry[];
   seoTitle: string | null;
   seoDescription: string | null;
   dailyLimit: number;
   winnersDemoMode?: boolean;
-  demoWinners?: DemoWinnerEntry[];
-  statsDemoMode?: boolean;
-  displayPlayersToday?: number;
-  displayWinnersToday?: number;
 };
 
 const TIERS = [
@@ -71,16 +56,39 @@ function emptyPrize(sortOrder: number): Omit<Prize, "id"> {
     name: "",
     prizeType: "",
     subtitle: "",
-    tier: "rare",
-    fulfillmentType: "none",
-    weight: 0,
+    tier: "epic",
+    fulfillmentType: "case",
+    weight: 1,
     displayOdds: null,
     emoji: "🎁",
     imageUrl: null,
-    drawable: false,
+    drawable: true,
     showInPool: true,
     active: true,
     sortOrder,
+  };
+}
+
+function willShowOnFrontend(prize: Prize): boolean {
+  return prize.active && prize.showInPool && prize.fulfillmentType !== "retry";
+}
+
+function normalizePrize(raw: Record<string, unknown>): Prize {
+  return {
+    id: Number(raw.id),
+    name: String(raw.name ?? ""),
+    prizeType: String(raw.prizeType ?? raw.prize_type ?? ""),
+    subtitle: (raw.subtitle as string | null) ?? null,
+    tier: String(raw.tier ?? "rare"),
+    fulfillmentType: String(raw.fulfillmentType ?? raw.fulfillment_type ?? "none"),
+    weight: Number(raw.weight) || 0,
+    displayOdds: (raw.displayOdds as string | null) ?? (raw.display_odds as string | null) ?? null,
+    emoji: String(raw.emoji ?? "🎁"),
+    imageUrl: (raw.imageUrl as string | null) ?? (raw.image_url as string | null) ?? null,
+    drawable: raw.drawable !== false && raw.drawable !== 0,
+    showInPool: raw.showInPool !== false && raw.show_in_pool !== false && raw.show_in_pool !== 0,
+    active: raw.active !== false && raw.active !== 0,
+    sortOrder: Number(raw.sortOrder ?? raw.sort_order) || 0,
   };
 }
 
@@ -89,61 +97,41 @@ export default function BlindBoxAdminPage() {
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
+  const [frontendPoolCount, setFrontendPoolCount] = useState<number | null>(null);
+  const saveTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+  const prizesRef = useRef<Prize[]>([]);
 
   const reload = useCallback(() => {
-    return fetch("/api/admin/blindbox")
-      .then((r) => r.json())
-      .then((d) => {
-        setConfig({
-          ...d.config,
-          heroShowcase: d.config?.heroShowcase ?? [],
-          demoWinners: d.config?.demoWinners?.length
-            ? d.config.demoWinners
-            : DEFAULT_DEMO_WINNERS,
-        });
-        setPrizes(d.prizes ?? []);
-      });
+    return Promise.all([
+      fetch("/api/admin/blindbox").then((r) => r.json().then((d) => ({ ok: r.ok, d }))),
+      fetch("/api/blindbox/prizes", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => (typeof d.poolCount === "number" ? d.poolCount : null))
+        .catch(() => null),
+    ]).then(([{ ok, d }, poolCount]) => {
+      if (!ok) {
+        setMsg(`❌ 加载失败：${d.error || "请重新登录后台"}`);
+        return;
+      }
+      setConfig(d.config);
+      setPrizes((d.prizes ?? []).map((p: Record<string, unknown>) => normalizePrize(p)));
+      setFrontendPoolCount(poolCount);
+    });
+  }, []);
+
+  useEffect(() => {
+    prizesRef.current = prizes;
+  }, [prizes]);
+
+  useEffect(() => {
+    return () => {
+      for (const timer of saveTimersRef.current.values()) clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
     reload().finally(() => setLoading(false));
   }, [reload]);
-
-  function updateDemoWinner(index: number, patch: Partial<DemoWinnerEntry>) {
-    if (!config) return;
-    const demoWinners = [...(config.demoWinners ?? DEFAULT_DEMO_WINNERS)];
-    demoWinners[index] = { ...demoWinners[index], ...patch };
-    setConfig({ ...config, demoWinners });
-  }
-
-  function addDemoWinner() {
-    if (!config) return;
-    const demoWinners = [...(config.demoWinners ?? DEFAULT_DEMO_WINNERS)];
-    demoWinners.push({ text: "", isGrand: false, minutesAgo: demoWinners.length * 2 });
-    setConfig({ ...config, demoWinners });
-  }
-
-  function removeDemoWinner(index: number) {
-    if (!config) return;
-    const demoWinners = (config.demoWinners ?? DEFAULT_DEMO_WINNERS).filter(
-      (_, i) => i !== index,
-    );
-    setConfig({ ...config, demoWinners });
-  }
-
-  function moveDemoWinner(index: number, direction: -1 | 1) {
-    if (!config) return;
-    const demoWinners = [...(config.demoWinners ?? DEFAULT_DEMO_WINNERS)];
-    const target = index + direction;
-    if (target < 0 || target >= demoWinners.length) return;
-    [demoWinners[index], demoWinners[target]] = [demoWinners[target], demoWinners[index]];
-    setConfig({ ...config, demoWinners });
-  }
-
-  function resetDemoWinners() {
-    if (!config) return;
-    setConfig({ ...config, demoWinners: DEFAULT_DEMO_WINNERS.map((row) => ({ ...row })) });
-  }
 
   async function saveConfig() {
     if (!config) return;
@@ -154,32 +142,77 @@ export default function BlindBoxAdminPage() {
       body: JSON.stringify(config),
     });
     const data = (await res.json().catch(() => ({}))) as { error?: string };
-    if (res.ok) {
-      await reload();
-      setMsg("✅ 盲盒设置已保存");
-    } else {
-      setMsg(`❌ ${data.error || "保存失败"}`);
-    }
+    setMsg(res.ok ? "✅ 盲盒设置已保存" : `❌ ${data.error || "保存失败"}`);
   }
 
-  async function savePrize(prize: Prize) {
+  async function savePrize(prize: Prize, opts?: { quiet?: boolean }) {
     if (!prize.name.trim()) {
-      setMsg("❌ 请填写礼品名称");
-      return;
+      if (!opts?.quiet) setMsg("❌ 请填写礼品名称");
+      return false;
     }
     if (!prize.prizeType?.trim()) {
-      setMsg("❌ 奖品数据不完整，请刷新页面后重试");
-      return;
+      if (!opts?.quiet) setMsg("❌ 奖品数据不完整，请刷新页面后重试");
+      return false;
     }
-    setMsg("保存中...");
+    if (!opts?.quiet) setMsg("保存中...");
     const res = await fetch(`/api/admin/blindbox/prizes/${prize.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(prize),
     });
     const data = (await res.json().catch(() => ({}))) as { error?: string };
-    setMsg(res.ok ? "✅ 礼品已保存" : `❌ ${data.error || "保存失败"}`);
-    if (res.ok) await reload();
+    if (res.ok) {
+      if (!opts?.quiet) setMsg("✅ 礼品已保存，首页奖池已更新");
+      await reload();
+      return true;
+    }
+    if (!opts?.quiet) setMsg(`❌ ${data.error || "保存失败"}`);
+    return false;
+  }
+
+  function scheduleAutoSave(prizeId: number) {
+    const existing = saveTimersRef.current.get(prizeId);
+    if (existing) clearTimeout(existing);
+    saveTimersRef.current.set(
+      prizeId,
+      setTimeout(() => {
+        const latest = prizesRef.current.find((p) => p.id === prizeId);
+        if (!latest) return;
+        void savePrize(latest, { quiet: true }).then((ok) => {
+          if (ok) setMsg("✅ 已自动保存并同步到首页");
+        });
+      }, 900),
+    );
+  }
+
+  async function saveAllPrizes() {
+    if (prizes.length === 0) return;
+    setMsg("保存全部礼品中...");
+    const results = await Promise.all(
+      prizes.map((prize) => {
+        if (!prize.name.trim() || !prize.prizeType?.trim()) {
+          return Promise.resolve(new Response(null, { status: 400 }));
+        }
+        return fetch(`/api/admin/blindbox/prizes/${prize.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(prize),
+        });
+      }),
+    );
+    const failed = results.filter((r) => !r.ok).length;
+    if (failed === 0) {
+      setMsg("✅ 全部礼品已保存，首页奖池将立即更新");
+      await reload();
+    } else {
+      setMsg(`❌ ${failed} 个礼品保存失败，请检查名称后逐个点「保存此礼品」`);
+    }
+  }
+
+  async function savePrizeImage(idx: number, url: string | null) {
+    const next = { ...prizes[idx], imageUrl: url };
+    updatePrize(idx, { imageUrl: url });
+    await savePrize(next);
   }
 
   async function addPrize() {
@@ -191,13 +224,18 @@ export default function BlindBoxAdminPage() {
         ...emptyPrize(prizes.length + 1),
         name: "新礼品",
         subtitle: "Premium Tech Prize",
+        drawable: true,
+        weight: 1,
+        tier: "epic",
+        fulfillmentType: "case",
       }),
     });
     if (res.ok) {
-      setMsg("✅ 已添加新礼品，请填写名称并上传图片");
+      setMsg("✅ 已添加新礼品，修改后会自动保存到首页");
       await reload();
     } else {
-      setMsg("❌ 添加失败");
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setMsg(`❌ 添加失败：${data.error || res.status}`);
     }
   }
 
@@ -217,6 +255,7 @@ export default function BlindBoxAdminPage() {
     setPrizes((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], ...patch };
+      scheduleAutoSave(next[idx].id);
       return next;
     });
   }
@@ -248,32 +287,51 @@ export default function BlindBoxAdminPage() {
   const drawWeight = prizes
     .filter((p) => p.active && p.drawable && p.weight > 0)
     .reduce((s, p) => s + p.weight, 0);
+  const localPoolCount = prizes.filter(willShowOnFrontend).length;
 
   return (
     <div className="max-w-4xl">
       <h1 className="text-2xl font-bold">盲盒管理</h1>
       <p className="mt-1 text-white/50">
-        管理所有高端礼品：iPhone、电脑、显卡、耳机、相机等。上传图片后会同步到首页奖池和 CS 开箱滚轴。
+        管理所有高端礼品：iPhone、电脑、显卡、耳机、相机等。修改后会自动保存并同步到首页奖池和开箱滚轴。
       </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+        <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-emerald-300">
+          本页将显示 {localPoolCount} 个礼品
+        </span>
+        {frontendPoolCount != null && (
+          <span
+            className={`rounded-lg border px-3 py-1.5 ${
+              frontendPoolCount === localPoolCount
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+            }`}
+          >
+            首页实际读取 {frontendPoolCount} 个
+            {frontendPoolCount !== localPoolCount ? "（请点保存全部或等待自动保存）" : ""}
+          </span>
+        )}
+        <a
+          href="/#prizes"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-amber-400 hover:underline"
+        >
+          打开首页奖池预览 ↗
+        </a>
+      </div>
       {msg && <p className="mt-4 text-sm text-amber-400">{msg}</p>}
 
       {config && (
         <section className="mt-8 space-y-4 rounded-xl border border-white/10 bg-white/5 p-6">
           <h2 className="font-semibold">盲盒设置</h2>
-          <p className="text-xs text-white/40">
-            货币单位：{MARKET_CURRENCY}（{formatAdminPrice(DEFAULT_BLIND_BOX_PRICE)}）— 与前台
-            market.config.json 一致，保存时自动纠正旧美元文案。
-          </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="text-white/70">抽奖价格 ({MARKET_CURRENCY})</span>
+              <span className="text-white/70">抽奖价格 (USD)</span>
               <input
                 type="number"
-                min={1}
                 value={config.price}
-                onChange={(e) =>
-                  setConfig({ ...config, price: Number(e.target.value) || DEFAULT_BLIND_BOX_PRICE })
-                }
+                onChange={(e) => setConfig({ ...config, price: Number(e.target.value) })}
                 className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
               />
             </label>
@@ -286,11 +344,10 @@ export default function BlindBoxAdminPage() {
               />
             </label>
             <label className="block text-sm">
-              <span className="text-white/70">大奖价值 ({MARKET_CURRENCY})</span>
+              <span className="text-white/70">大奖价值</span>
               <input
                 value={config.grandPrizeValue}
                 onChange={(e) => setConfig({ ...config, grandPrizeValue: e.target.value })}
-                placeholder={DEFAULT_GRAND_PRIZE_VALUE}
                 className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
               />
             </label>
@@ -318,152 +375,9 @@ export default function BlindBoxAdminPage() {
                 checked={config.winnersDemoMode ?? true}
                 onChange={(e) => setConfig({ ...config, winnersDemoMode: e.target.checked })}
               />
-              <span className="text-white/70">前台中奖动态演示模式（不显示真实中奖）</span>
+              <span className="text-white/70">前台中奖动态演示模式</span>
             </label>
           </div>
-
-          {(config.winnersDemoMode ?? true) && (
-            <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-amber-200">演示中奖名单</h3>
-                  <p className="mt-1 text-xs text-white/45">
-                    前台滚动展示此列表（马来语），与用户选择的语言无关。关闭演示模式后才会显示真实中奖。
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={resetDemoWinners}
-                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/5"
-                  >
-                    恢复默认
-                  </button>
-                  <button
-                    type="button"
-                    onClick={addDemoWinner}
-                    className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/15"
-                  >
-                    + 添加一条
-                  </button>
-                </div>
-              </div>
-              <div className="mt-4 space-y-3">
-                {(config.demoWinners ?? DEFAULT_DEMO_WINNERS).map((row, index) => (
-                  <div
-                    key={index}
-                    className="grid gap-2 rounded-lg border border-white/10 bg-black/20 p-3 sm:grid-cols-[1fr_auto_auto_auto]"
-                  >
-                    <label className="block text-xs sm:col-span-1">
-                      <span className="text-white/50">展示文案（马来语）</span>
-                      <input
-                        value={row.text}
-                        onChange={(e) => updateDemoWinner(index, { text: e.target.value })}
-                        placeholder="Ahmad dari KL memenangi iPhone 17 Pro Max"
-                        className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm"
-                      />
-                    </label>
-                    <label className="flex items-end gap-2 text-xs pb-2">
-                      <input
-                        type="checkbox"
-                        checked={!!row.isGrand}
-                        onChange={(e) => updateDemoWinner(index, { isGrand: e.target.checked })}
-                      />
-                      <span className="text-white/60">大奖</span>
-                    </label>
-                    <label className="block text-xs">
-                      <span className="text-white/50">分钟前</span>
-                      <input
-                        type="number"
-                        min={0}
-                        value={row.minutesAgo ?? ""}
-                        placeholder="自动"
-                        onChange={(e) =>
-                          updateDemoWinner(index, {
-                            minutesAgo: e.target.value === "" ? null : Number(e.target.value),
-                          })
-                        }
-                        className="mt-1 w-20 rounded-lg border border-white/10 bg-white/5 px-2 py-2 text-sm"
-                      />
-                    </label>
-                    <div className="flex items-end gap-1 pb-1">
-                      <button
-                        type="button"
-                        onClick={() => moveDemoWinner(index, -1)}
-                        disabled={index === 0}
-                        className="rounded border border-white/10 px-2 py-1 text-xs disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveDemoWinner(index, 1)}
-                        disabled={index === (config.demoWinners ?? DEFAULT_DEMO_WINNERS).length - 1}
-                        className="rounded border border-white/10 px-2 py-1 text-xs disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeDemoWinner(index)}
-                        className="rounded border border-red-500/30 px-2 py-1 text-xs text-red-300"
-                      >
-                        删
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4">
-            <h3 className="text-sm font-semibold text-white/90">前台数据统计</h3>
-            <p className="mt-1 text-xs text-white/45">
-              首页「今日参与 / 今日中奖」数字。开启演示模式后显示下方配置值，关闭后显示真实抽奖统计。
-            </p>
-            <label className="mt-3 flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={config.statsDemoMode ?? true}
-                onChange={(e) => setConfig({ ...config, statsDemoMode: e.target.checked })}
-              />
-              <span className="text-white/70">使用后台配置的展示数据</span>
-            </label>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm">
-                <span className="text-white/70">今日参与人数</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={config.displayPlayersToday ?? 0}
-                  onChange={(e) =>
-                    setConfig({
-                      ...config,
-                      displayPlayersToday: Number(e.target.value) || 0,
-                    })
-                  }
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="text-white/70">今日中奖人数</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={config.displayWinnersToday ?? 0}
-                  onChange={(e) =>
-                    setConfig({
-                      ...config,
-                      displayWinnersToday: Number(e.target.value) || 0,
-                    })
-                  }
-                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
-                />
-              </label>
-            </div>
-          </div>
-
           <label className="block text-sm">
             <span className="text-white/70">首页标题</span>
             <input
@@ -477,14 +391,15 @@ export default function BlindBoxAdminPage() {
             <textarea
               value={config.heroSubtitle ?? ""}
               onChange={(e) => setConfig({ ...config, heroSubtitle: e.target.value })}
-              placeholder={DEFAULT_HERO_SUBTITLE}
               rows={2}
               className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
             />
           </label>
-          <HeroShowcaseEditor
-            value={config.heroShowcase ?? []}
-            onChange={(heroShowcase) => setConfig({ ...config, heroShowcase })}
+          <ImageUpload
+            label="首页主图（右侧大奖展示图）"
+            hint="建议 512×512 以上。上传成功后务必点「保存盲盒设置」。"
+            value={config.grandPrizeImageUrl ?? ""}
+            onChange={(url) => setConfig({ ...config, grandPrizeImageUrl: url || null })}
           />
           <button
             onClick={saveConfig}
@@ -500,15 +415,24 @@ export default function BlindBoxAdminPage() {
           <div>
             <h2 className="font-semibold">礼品库 ({prizes.length})</h2>
             <p className="mt-1 text-xs text-white/40">
-              上方红色区域 = 真实抽奖权重；下方金色区域 = 用户看到的展示概率，两者可不同。
+              修改后会自动保存并同步到首页（约 1 秒）。前台显示需勾选：启用 + 显示在奖池；发奖类型勿选「安慰奖/未中」。
             </p>
           </div>
-          <button
-            onClick={addPrize}
-            className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-black"
-          >
-            + 添加礼品
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={saveAllPrizes}
+              disabled={prizes.length === 0}
+              className="rounded-lg border border-amber-500/50 px-4 py-2 text-sm font-medium text-amber-300 hover:bg-amber-500/10 disabled:opacity-40"
+            >
+              保存全部礼品
+            </button>
+            <button
+              onClick={addPrize}
+              className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-black"
+            >
+              + 添加礼品
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 space-y-5">
@@ -538,6 +462,13 @@ export default function BlindBoxAdminPage() {
                   <span className="ml-auto text-right text-xs font-medium text-amber-400">
                     前台 {displayLabel}
                     <span className="mt-0.5 block text-[10px] text-white/40">真实抽奖 {realOdds}</span>
+                    <span
+                      className={`mt-0.5 block text-[10px] ${
+                        willShowOnFrontend(prize) ? "text-emerald-400/90" : "text-red-300/90"
+                      }`}
+                    >
+                      {willShowOnFrontend(prize) ? "✓ 会显示在首页奖池" : "✗ 不会显示在首页奖池"}
+                    </span>
                   </span>
                   <button
                     type="button"
@@ -664,13 +595,19 @@ export default function BlindBoxAdminPage() {
                     />
                     <span className="text-white/70">参与抽奖</span>
                   </label>
-                  <label className="flex items-center gap-2">
+                  <label
+                    className={`flex items-center gap-2 rounded-lg px-2 py-1 ${
+                      prize.showInPool ? "" : "border border-red-500/40 bg-red-500/10"
+                    }`}
+                  >
                     <input
                       type="checkbox"
                       checked={prize.showInPool}
                       onChange={(e) => updatePrize(idx, { showInPool: e.target.checked })}
                     />
-                    <span className="text-white/70">显示在奖池</span>
+                    <span className={prize.showInPool ? "text-white/70" : "font-semibold text-red-300"}>
+                      显示在奖池（前台必勾）
+                    </span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input
@@ -681,13 +618,20 @@ export default function BlindBoxAdminPage() {
                     <span className="text-white/70">启用</span>
                   </label>
                 </div>
+                {!prize.showInPool && (
+                  <p className="mt-2 text-xs font-medium text-red-300">
+                    ⚠ 未勾选「显示在奖池」，该礼品不会出现在首页奖池和抽奖滚轴里。
+                  </p>
+                )}
 
                 <div className="mt-3">
                   <ImageUpload
                     label="礼品展示图（PNG/JPG，用于奖池 + 开箱滚轴）"
-                    hint="建议 512×512 白底或透明底商品图。系统会自动去掉白底，只保留产品。上传后务必点「保存此礼品」。"
+                    hint="白底商品图默认自动抠透明底。纯白色产品（如白色耳机）若被抠坏，请取消勾选「自动去除白底」后重新上传。"
+                    enableCutout
+                    defaultCutout
                     value={prize.imageUrl ?? ""}
-                    onChange={(url) => updatePrize(idx, { imageUrl: url || null })}
+                    onChange={(url) => void savePrizeImage(idx, url || null)}
                   />
                 </div>
 

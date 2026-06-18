@@ -1,5 +1,4 @@
 import Image from "next/image";
-import OptimizedRasterImage from "@/components/OptimizedRasterImage";
 
 type Props = {
   imageUrl?: string | null;
@@ -27,48 +26,20 @@ export default function PrizeVisual({
 
   if (imageUrl) {
     const isSvg = imageUrl.endsWith(".svg");
-    const isLocal = imageUrl.startsWith("/");
-    const imgClass = `h-full w-full object-contain p-1 ${isSvg ? "" : "prize-cutout-img drop-shadow-[0_6px_14px_rgba(0,0,0,0.45)]"}`;
-
     return (
       <div
-        className={`relative shrink-0 overflow-visible ${s.box} ${className}`}
+        className={`relative shrink-0 overflow-hidden rounded-xl ${s.box} ${className} ${
+          isSvg ? "" : "bg-white/95 ring-1 ring-black/5"
+        }`}
       >
-        {isLocal ? (
-          isSvg ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imageUrl}
-              alt={alt}
-              width={s.img}
-              height={s.img}
-              loading="lazy"
-              decoding="async"
-              className={imgClass}
-            />
-          ) : (
-            <OptimizedRasterImage
-              src={imageUrl}
-              alt={alt}
-              width={s.img}
-              height={s.img}
-              loading="lazy"
-              decoding="async"
-              thumbnail
-              className={imgClass}
-            />
-          )
-        ) : (
-          <Image
-            src={imageUrl}
-            alt={alt}
-            width={s.img}
-            height={s.img}
-            className={imgClass}
-            unoptimized={isSvg}
-            loading="lazy"
-          />
-        )}
+        <Image
+          src={imageUrl}
+          alt={alt}
+          width={s.img}
+          height={s.img}
+          className={`h-full w-full object-contain p-1 ${isSvg ? "" : "drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)]"}`}
+          unoptimized={isSvg}
+        />
       </div>
     );
   }

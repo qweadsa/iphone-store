@@ -11,15 +11,80 @@ function readPixel(data: Buffer, idx: number): Rgba {
   };
 }
 
-/** 与边缘相连、偏亮且低饱和度的像素视为背景（典型白底商品图） */
-function isBackgroundPixel(r: number, g: number, b: number, threshold: number): boolean {
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const saturation = max - min;
-  return max >= threshold && saturation <= 28;
+function pixelMax(r: number, g: number, b: number): number {
+  return Math.max(r, g, b);
 }
 
-function floodRemoveBackground(data: Buffer, width: number, height: number, threshold: number) {
+function pixelSaturation(r: number, g: number, b: number): number {
+  const max = pixelMax(r, g, b);
+  const min = Math.min(r, g, b);
+  return max - min;
+}
+
+/** 边缘可剥离的浅底背景（略宽松，遇到产品阴影会停住） */
+function isPeelableBackground(r: number, g: number, b: number): boolean {
+  const max = pixelMax(r, g, b);
+  const sat = pixelSaturation(r, g, b);
+  return max >= 232 && sat <= 16;
+}
+
+/** 与边缘相连的纯白背景（严格，避免吃进白色产品） */
+function isFloodBackground(r: number, g: number, b: number): boolean {
+  const max = pixelMax(r, g, b);
+  const sat = pixelSaturation(r, g, b);
+  return max >= 250 && sat <= 8;
+}
+
+/** 与透明区相邻的极浅残留白边 */
+function isRimBackground(r: number, g: number, b: number): boolean {
+  const max = pixelMax(r, g, b);
+  const sat = pixelSaturation(r, g, b);
+  return max >= 252 && sat <= 5;
+}
+
+function clearAlpha(data: Buffer, idx: number) {
+  data[idx * 4 + 3] = 0;
+}
+
+/** 从四边向内剥离浅底，遇到产品边缘（亮度/饱和度变化）即停止 */
+function peelBorders(data: Buffer, width: number, height: number) {
+  const get = (idx: number) => readPixel(data, idx * 4);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = y * width + x;
+      const { r, g, b } = get(idx);
+      if (!isPeelableBackground(r, g, b)) break;
+      clearAlpha(data, idx);
+    }
+    for (let x = width - 1; x >= 0; x--) {
+      const idx = y * width + x;
+      if (data[idx * 4 + 3] === 0) break;
+      const { r, g, b } = get(idx);
+      if (!isPeelableBackground(r, g, b)) break;
+      clearAlpha(data, idx);
+    }
+  }
+
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      const idx = y * width + x;
+      if (data[idx * 4 + 3] === 0) continue;
+      const { r, g, b } = get(idx);
+      if (!isPeelableBackground(r, g, b)) break;
+      clearAlpha(data, idx);
+    }
+    for (let y = height - 1; y >= 0; y--) {
+      const idx = y * width + x;
+      if (data[idx * 4 + 3] === 0) break;
+      const { r, g, b } = get(idx);
+      if (!isPeelableBackground(r, g, b)) break;
+      clearAlpha(data, idx);
+    }
+  }
+}
+
+function floodRemoveBackground(data: Buffer, width: number, height: number) {
   const total = width * height;
   const visited = new Uint8Array(total);
   const queue: number[] = [];
@@ -29,7 +94,7 @@ function floodRemoveBackground(data: Buffer, width: number, height: number, thre
     const idx = y * width + x;
     if (visited[idx]) return;
     const i = idx * 4;
-    if (!isBackgroundPixel(data[i], data[i + 1], data[i + 2], threshold)) return;
+    if (!isFloodBackground(data[i], data[i + 1], data[i + 2])) return;
     visited[idx] = 1;
     queue.push(idx);
   };
@@ -47,16 +112,17 @@ function floodRemoveBackground(data: Buffer, width: number, height: number, thre
     const idx = queue.pop()!;
     const x = idx % width;
     const y = (idx - x) / width;
-    const i = idx * 4;
-    data[i + 3] = 0;
+    clearAlpha(data, idx);
 
     tryPush(x - 1, y);
     tryPush(x + 1, y);
     tryPush(x, y - 1);
     tryPush(x, y + 1);
   }
+}
 
-  // 去掉与透明区域相邻的残留白边
+/** 仅去掉贴边的极浅白边，不侵蚀产品主体 */
+function cleanupRim(data: Buffer, width: number, height: number) {
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
       const idx = y * width + x;
@@ -73,7 +139,7 @@ function floodRemoveBackground(data: Buffer, width: number, height: number, thre
       if (!touchesBg) continue;
 
       const { r, g, b } = readPixel(data, i);
-      if (isBackgroundPixel(r, g, b, threshold - 16)) {
+      if (isRimBackground(r, g, b)) {
         data[i + 3] = 0;
       }
     }
@@ -87,7 +153,9 @@ export async function removeLightBackgroundFromBuffer(input: Buffer): Promise<Bu
     .toBuffer({ resolveWithObject: true });
 
   const pixels = Buffer.from(data);
-  floodRemoveBackground(pixels, info.width, info.height, 238);
+  peelBorders(pixels, info.width, info.height);
+  floodRemoveBackground(pixels, info.width, info.height);
+  cleanupRim(pixels, info.width, info.height);
 
   return sharp(pixels, {
     raw: { width: info.width, height: info.height, channels: 4 },

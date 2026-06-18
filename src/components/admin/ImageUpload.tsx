@@ -9,17 +9,23 @@ type Props = {
   onChange: (url: string) => void;
   label?: string;
   hint?: string;
+  /** 显示「自动去除白底」选项（默认开启抠图） */
+  enableCutout?: boolean;
+  defaultCutout?: boolean;
 };
 
 export default function ImageUpload({
   value,
   onChange,
   label = "图片",
-  hint = "支持 JPG / PNG / WebP / GIF / SVG，最大 8MB。白底商品图会自动抠图成透明 PNG，上传后记得点保存。",
+  hint = "支持 JPG / PNG / WebP / GIF / SVG，最大 8MB。白底商品图默认自动抠成透明 PNG。",
+  enableCutout = false,
+  defaultCutout = true,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [cutout, setCutout] = useState(defaultCutout);
 
   async function handleFile(file: File) {
     setError("");
@@ -31,6 +37,7 @@ export default function ImageUpload({
     try {
       const form = new FormData();
       form.append("file", file);
+      if (enableCutout && !cutout) form.append("preserveOriginal", "1");
       const res = await fetch("/api/admin/upload", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "上传失败");
@@ -43,12 +50,29 @@ export default function ImageUpload({
     }
   }
 
+  const previewBg =
+    enableCutout && cutout
+      ? "bg-[linear-gradient(45deg,#3a3a48_25%,transparent_25%),linear-gradient(-45deg,#3a3a48_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#3a3a48_75%),linear-gradient(-45deg,transparent_75%,#3a3a48_75%)] bg-[length:10px_10px] bg-[position:0_0,0_5px,5px_-5px,-5px_0px] bg-[#2a2a34]"
+      : "bg-[#1a1a24]";
+
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-white/80">{label}</label>
       {hint && <p className="mb-2 text-xs text-white/40">{hint}</p>}
+      {enableCutout && (
+        <label className="mb-3 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={cutout}
+            onChange={(e) => setCutout(e.target.checked)}
+          />
+          <span className="text-white/70">自动去除白底（输出透明 PNG）</span>
+        </label>
+      )}
       <div className="flex flex-wrap items-start gap-4">
-        <div className="relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/5">
+        <div
+          className={`relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 ${previewBg}`}
+        >
           {value ? (
             <Image
               src={value}

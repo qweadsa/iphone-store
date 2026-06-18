@@ -2,15 +2,10 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/orders";
 import {
-  computeBlindBoxCheckout,
-  parseBlindBoxPaymentMeta,
-  type BlindBoxPaymentMeta,
-} from "@/lib/blindbox-wallet";import {
   createPayPalOrder,
   isPayPalConfigured,
   getPayPalClientId,
 } from "./paypal";
-import { DEFAULT_CHECKOUT_METHOD } from "./methods";
 import { generateMethodQr, getReceiveSettings } from "./receive-qr";
 import { getPaymentRequireAdminConfirm } from "./settings";
 import type { CreatePaymentInput, PaymentResult } from "./types";
@@ -21,113 +16,6 @@ function siteUrl(): string {
 
 export function generatePaymentId(): string {
   return `PAY-${generateOrderNumber().replace("ORD-", "")}`;
-}
-
-async function settleBlindBoxWalletUse(
-  paymentId: string,
-  userId: number,
-  meta: BlindBoxPaymentMeta,
-): Promise<void> {
-  if (meta.walletSettled || meta.walletUse <= 0) return;
-
-  await prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error("User not found");
-    if (user.balance < meta.walletUse) throw new Error("Insufficient wallet balance");
-
-    await tx.user.update({
-      where: { id: userId },
-      data: { balance: { decrement: meta.walletUse } },
-    });
-    await tx.walletTransaction.create({
-      data: {
-        userId,
-        amount: -meta.walletUse,
-        type: "spend",
-        paymentId,
-        description: `Gift box wallet credit (RM${meta.walletUse.toFixed(2)})`,
-      },
-    });
-    await tx.payment.update({
-      where: { paymentId },
-      data: {
-        metadata: {
-          fullPrice: meta.fullPrice,
-          walletUse: meta.walletUse,
-          walletSettled: true,
-        } as Prisma.InputJsonValue,
-      },
-    });
-  });
-}
-
-export async function createBlindBoxPayment(input: {
-  userId: number;
-  email: string;
-  fullPrice: number;
-}): Promise<PaymentResult & { walletUse?: number; fullPrice?: number }> {
-  const user = await prisma.user.findUnique({ where: { id: input.userId } });
-  if (!user) throw new Error("User not found");
-
-  const { cashDue, walletUse, fullPrice } = computeBlindBoxCheckout(
-    input.fullPrice,
-    user.balance,
-  );
-  const metadata: BlindBoxPaymentMeta = { fullPrice, walletUse };
-
-  if (cashDue <= 0) {
-    const paymentId = generatePaymentId();
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: input.userId },
-        data: { balance: { decrement: walletUse } },
-      });
-      await tx.walletTransaction.create({
-        data: {
-          userId: input.userId,
-          amount: -walletUse,
-          type: "spend",
-          paymentId,
-          description: `Gift box paid with wallet (RM${walletUse.toFixed(2)})`,
-        },
-      });
-      await tx.payment.create({
-        data: {
-          paymentId,
-          userId: input.userId,
-          email: input.email,
-          amount: 0,
-          purpose: "blindbox",
-          metadata: { ...metadata, walletSettled: true } as Prisma.InputJsonValue,
-          provider: "internal",
-          payUrl: `${siteUrl()}/pay/${paymentId}`,
-          status: "completed",
-          method: "balance",
-        },
-      });
-    });
-
-    return {
-      paymentId,
-      amount: 0,
-      status: "completed",
-      payUrl: `${siteUrl()}/pay/${paymentId}`,
-      demoMode: true,
-      requireAdminConfirm: false,
-      walletUse,
-      fullPrice,
-    };
-  }
-
-  const result = await createPayment({
-    amount: cashDue,
-    purpose: "blindbox",
-    userId: input.userId,
-    email: input.email,
-    metadata,
-  });
-
-  return { ...result, walletUse, fullPrice };
 }
 
 export async function createPayment(
@@ -183,9 +71,9 @@ export async function createPayment(
   const receiveSettings = await getReceiveSettings();
   const requireAdminConfirm = await getPaymentRequireAdminConfirm();
 
-  // 只预生成默认 TNG 二维码，其余方式按需加载，避免卡顿
+  // 只预生成默认 PayPal 二维码，其余方式按需加载，避免卡顿
   const defaultMethodQr = await generateMethodQr(
-    DEFAULT_CHECKOUT_METHOD,
+    "paypal",
     input.amount,
     paymentId,
     receiveSettings,
@@ -199,7 +87,7 @@ export async function createPayment(
     qrDataUrl: defaultMethodQr.qrDataUrl,
     paypalClientId: getPayPalClientId(),
     demoMode: provider === "demo",
-    methodQrs: { [DEFAULT_CHECKOUT_METHOD]: defaultMethodQr },
+    methodQrs: { paypal: defaultMethodQr },
     receiveNote: receiveSettings.receiveNote,
     requireAdminConfirm,
   };
@@ -218,13 +106,6 @@ export async function completePayment(
     where: { paymentId },
     data: { status: "completed", method },
   });
-
-  if (payment.purpose === "blindbox" && payment.userId) {
-    const meta = parseBlindBoxPaymentMeta(payment.metadata);
-    if (meta && meta.walletUse > 0 && !meta.walletSettled) {
-      await settleBlindBoxWalletUse(paymentId, payment.userId, meta);
-    }
-  }
 
   if (payment.purpose === "recharge" && payment.userId) {
     await prisma.$transaction([
@@ -259,10 +140,6 @@ export async function payWithBalance(
   if (!payment) return { ok: false, error: "Payment not found" };
   if (payment.status === "completed") return { ok: true };
   if (payment.purpose === "blindbox") {
-    const meta = parseBlindBoxPaymentMeta(payment.metadata);
-    if (meta && meta.walletUse > 0) {
-      return { ok: false, error: "Blind box with wallet credit must be paid by QR scan" };
-    }
     return { ok: false, error: "Blind box must be paid by QR scan" };
   }
   if (payment.userId && payment.userId !== userId) {

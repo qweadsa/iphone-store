@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import QRCode from "qrcode";
 import { findPaymentQrWebPath } from "@/lib/payment-qr-files";
 import { type PaymentMethodId } from "./methods";
@@ -35,13 +36,6 @@ export function buildReceiveUrl(
   const payPage = `${siteUrl()}/pay/${paymentId}?method=${method}`;
 
   switch (method) {
-    case "duitnow":
-    case "tng":
-    case "grabpay":
-    case "shopeepay":
-    case "crypto":
-      return payPage;
-
     case "paypal":
       if (settings.paypalMe?.trim()) {
         const user = settings.paypalMe.trim().replace(/^@/, "");

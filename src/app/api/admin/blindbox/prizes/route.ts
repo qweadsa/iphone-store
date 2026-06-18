@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
+import { adminApiErrorMessage } from "@/lib/admin-api-error";
 
 function slugify(name: string): string {
   const base = name
@@ -54,6 +55,9 @@ export async function POST(req: Request) {
     if (e instanceof Error && e.message === "UNAUTHORIZED") {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
-    return NextResponse.json({ error: "创建失败" }, { status: 500 });
+    return NextResponse.json(
+      { error: adminApiErrorMessage(e, "创建失败") },
+      { status: 500 },
+    );
   }
 }

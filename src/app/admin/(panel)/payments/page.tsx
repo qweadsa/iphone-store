@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHECKOUT_METHODS } from "@/lib/payments/methods";
-import { formatAdminPrice } from "@/lib/market";
+import { formatPaymentAge, getPaymentTransferRef } from "@/lib/payment-ref";
 
 type QrStatus = {
   method: string;
@@ -103,23 +103,19 @@ export default function ReceiveSettingsPage() {
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [activePaying, setActivePaying] = useState<ActivePayment[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
-  const [listLimit, setListLimit] = useState(30);
   const [statusFilter, setStatusFilter] = useState("all");
   const [msg, setMsg] = useState("");
   const [uploading, setUploading] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
-  const [clearing, setClearing] = useState(false);
 
   const loadPayments = useCallback(async () => {
-    const res = await fetch(`/api/admin/payments/orders?status=${statusFilter}&limit=${listLimit}`);
+    const res = await fetch(`/api/admin/payments/orders?status=${statusFilter}`);
     const data = await res.json();
     if (data.payments) setPayments(data.payments);
     if (data.active) setActivePaying(data.active);
     if (typeof data.pendingCount === "number") setPendingCount(data.pendingCount);
-    if (typeof data.totalCount === "number") setTotalCount(data.totalCount);
-  }, [statusFilter, listLimit]);
+  }, [statusFilter]);
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -139,33 +135,6 @@ export default function ReceiveSettingsPage() {
     const timer = window.setInterval(loadPayments, 3000);
     return () => window.clearInterval(timer);
   }, [loadPayments]);
-
-  async function clearFinishedPayments() {
-    if (
-      !confirm(
-        "确定清除所有「已确认收款」和「用户已取消」的记录吗？\n正在付款中的记录会保留。",
-      )
-    ) {
-      return;
-    }
-    setClearing(true);
-    setMsg("");
-    try {
-      const res = await fetch("/api/admin/payments/cleanup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scope: "completed_cancelled" }),
-      });
-      const data = (await res.json().catch(() => ({}))) as { deleted?: number; error?: string };
-      if (!res.ok) throw new Error(data.error || "清除失败");
-      setMsg(`✅ 已清除 ${data.deleted ?? 0} 条历史付款记录`);
-      await loadPayments();
-    } catch (e) {
-      setMsg(`❌ ${e instanceof Error ? e.message : "清除失败"}`);
-    } finally {
-      setClearing(false);
-    }
-  }
 
   async function cancelPayment(paymentId: string) {
     setCancelling(paymentId);
@@ -251,7 +220,7 @@ export default function ReceiveSettingsPage() {
     <div className="max-w-4xl">
       <h1 className="text-2xl font-bold">收款 & 支付监控</h1>
       <p className="mt-1 text-white/50">
-        用户一点付款就会出现在下方；取消则自动标记，到账后你点「确认已收款」即可
+        用户一点付款就会出现在下方；核对 TNG 到账时，请对照「转账参考号 + 邮箱 + 金额 + 时间」再点确认
       </p>
       {msg && <p className="mt-4 text-sm text-amber-400">{msg}</p>}
 
@@ -276,20 +245,31 @@ export default function ReceiveSettingsPage() {
               当前没有用户正在付款
             </p>
           )}
-          {activePaying.map((row) => (
+          {activePaying.map((row) => {
+            const transferRef = getPaymentTransferRef(row.paymentId);
+            return (
             <div
               key={row.paymentId}
               className="flex flex-wrap items-center gap-4 rounded-lg border border-amber-500/20 bg-black/30 p-4"
             >
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-amber-400/80">正在付款中…</p>
-                <p className="font-mono text-base font-bold text-amber-300">{row.paymentId}</p>
-                <p className="mt-1 text-lg font-semibold">
-                  {formatAdminPrice(row.amount)} · {PURPOSE_LABEL[row.purpose] ?? row.purpose}
+                <div className="mt-1 flex flex-wrap items-baseline gap-3">
+                  <p className="font-mono text-2xl font-black tracking-wider text-amber-200">
+                    {transferRef}
+                  </p>
+                  <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+                    TNG 备注请填此号
+                  </span>
+                </div>
+                <p className="mt-1 font-mono text-xs text-white/35">{row.paymentId}</p>
+                <p className="mt-2 text-lg font-semibold">
+                  ${row.amount.toFixed(2)} · {PURPOSE_LABEL[row.purpose] ?? row.purpose}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/40">
                   <PayerBadge row={row} />
-                  <span>开始于 {new Date(row.createdAt).toLocaleTimeString()}</span>
+                  <span>{formatPaymentAge(row.createdAt)}</span>
+                  <span>· {new Date(row.createdAt).toLocaleTimeString()}</span>
                 </div>
                 <PayerEmail row={row} />
               </div>
@@ -312,7 +292,8 @@ export default function ReceiveSettingsPage() {
                 </button>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
 
@@ -320,40 +301,18 @@ export default function ReceiveSettingsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold">付款记录</h2>
-            <p className="mt-1 text-xs text-white/40">
-              共 {totalCount.toLocaleString()} 条 · 仅显示最近 {listLimit} 条
-            </p>
+            <p className="mt-1 text-xs text-white/40">历史记录：已确认 / 已取消</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={String(listLimit)}
-              onChange={(e) => setListLimit(Number(e.target.value))}
-              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
-            >
-              <option value="20">显示 20 条</option>
-              <option value="30">显示 30 条</option>
-              <option value="50">显示 50 条</option>
-              <option value="100">显示 100 条</option>
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
-            >
-              <option value="all">全部记录</option>
-              <option value="completed">已确认收款</option>
-              <option value="cancelled">用户已取消</option>
-              <option value="pending">正在付款</option>
-            </select>
-            <button
-              type="button"
-              disabled={clearing}
-              onClick={() => void clearFinishedPayments()}
-              className="rounded-lg border border-red-500/40 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-            >
-              {clearing ? "清除中..." : "清除已完成记录"}
-            </button>
-          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
+          >
+            <option value="all">全部记录</option>
+            <option value="completed">已确认收款</option>
+            <option value="cancelled">用户已取消</option>
+            <option value="pending">正在付款</option>
+          </select>
         </div>
 
         <div className="mt-4 space-y-3">
@@ -362,15 +321,18 @@ export default function ReceiveSettingsPage() {
               暂无记录
             </p>
           )}
-          {payments.map((row) => (
+          {payments.map((row) => {
+            const transferRef = getPaymentTransferRef(row.paymentId);
+            return (
             <div
               key={row.paymentId}
               className="flex flex-wrap items-center gap-4 rounded-lg border border-white/10 bg-black/20 p-4"
             >
               <div className="min-w-0 flex-1">
-                <p className="font-mono text-sm font-bold text-white/80">{row.paymentId}</p>
+                <p className="font-mono text-lg font-bold text-white/90">{transferRef}</p>
+                <p className="font-mono text-xs text-white/35">{row.paymentId}</p>
                 <p className="mt-1 text-sm">
-                  {formatAdminPrice(row.amount)} · {PURPOSE_LABEL[row.purpose] ?? row.purpose}
+                  ${row.amount.toFixed(2)} · {PURPOSE_LABEL[row.purpose] ?? row.purpose}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/40">
                   <PayerBadge row={row} />
@@ -410,7 +372,8 @@ export default function ReceiveSettingsPage() {
                 </button>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
 
@@ -455,27 +418,14 @@ export default function ReceiveSettingsPage() {
       </div>
 
       <div className="mt-6 space-y-4 rounded-xl border border-white/10 bg-white/5 p-6">
-        <h2 className="font-semibold">收款账户（可选）</h2>
-        <p className="text-xs text-white/40">
-          马来西亚站点主要使用上方二维码收款；以下链接字段为备用，一般无需填写。
-        </p>
+        <h2 className="font-semibold">收款账户（可选，用于生成链接）</h2>
 
         <label className="block text-sm">
-          <span className="text-white/70">通用收款链接（备用）</span>
-          <input
-            value={receiveLink}
-            onChange={(e) => setReceiveLink(e.target.value)}
-            placeholder="可选：第三方支付链接"
-            className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
-          />
-        </label>
-
-        <label className="block text-sm">
-          <span className="text-white/70">PayPal.me（备用，非马来主流）</span>
+          <span className="text-white/70">PayPal.me 用户名</span>
           <input
             value={paypalMe}
             onChange={(e) => setPaypalMe(e.target.value)}
-            placeholder="yourname"
+            placeholder="yourname → paypal.me/yourname/金额"
             className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
           />
         </label>
@@ -486,6 +436,16 @@ export default function ReceiveSettingsPage() {
             value={paypalEmail}
             onChange={(e) => setPaypalEmail(e.target.value)}
             placeholder="you@email.com"
+            className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+          />
+        </label>
+
+        <label className="block text-sm">
+          <span className="text-white/70">Visa 收款链接</span>
+          <input
+            value={receiveLink}
+            onChange={(e) => setReceiveLink(e.target.value)}
+            placeholder="Stripe Payment Link 等"
             className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
           />
         </label>

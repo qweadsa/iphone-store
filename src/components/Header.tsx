@@ -9,11 +9,8 @@ import { formatPrice } from "@/lib/products";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 function priceLocale(locale: string) {
-  if (locale === "ms") return "ms-MY";
   if (locale === "zh") return "zh-CN";
-  if (locale === "ja") return "ja-JP";
-  if (locale === "ko") return "ko-KR";
-  return "en-US";
+  return locale;
 }
 
 function WhatsAppIcon({ className }: { className?: string }) {

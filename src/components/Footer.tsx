@@ -12,7 +12,9 @@ export default function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <p className="text-lg font-semibold">🎁 Mystery Box</p>
-            <p className="mt-2 text-sm text-white/50">{f.tagline}</p>
+            <p className="mt-2 text-sm text-white/50">
+              $60 to win iPhone 17 Pro Max. Free global shipping.
+            </p>
           </div>
           <div>
             <p className="text-sm font-medium">{f.help}</p>
@@ -25,6 +27,7 @@ export default function Footer() {
           <div>
             <p className="text-sm font-medium">{f.contact}</p>
             <ul className="mt-3 space-y-2 text-sm text-white/50">
+              <li>{f.phone}</li>
               <li>{f.hours}</li>
               <li>
                 <a

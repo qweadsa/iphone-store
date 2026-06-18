@@ -17,7 +17,7 @@ export function mapDbPrize(r: {
   sortOrder?: number | null;
 }): BlindBoxPrize {
   const tier = (r.tier ?? "rare") as ReelTier;
-  const fulfillmentType = (r.fulfillmentType ?? inferFulfillment(r.prizeType)) as FulfillmentType;
+  const fulfillmentType = resolveFulfillmentType(r.fulfillmentType, r.prizeType);
   return {
     id: r.id,
     key: r.prizeType,
@@ -34,6 +34,15 @@ export function mapDbPrize(r: {
     active: r.active ?? true,
     sortOrder: r.sortOrder ?? 0,
   };
+}
+
+function resolveFulfillmentType(
+  fulfillmentType: string | null | undefined,
+  prizeType: string,
+): FulfillmentType {
+  const ft = fulfillmentType?.trim();
+  if (ft && ft !== "none") return ft as FulfillmentType;
+  return inferFulfillment(prizeType);
 }
 
 function inferFulfillment(prizeType: string): FulfillmentType {

@@ -5,7 +5,6 @@ import { useI18n } from "@/lib/i18n-context";
 import { getPrizeDisplayOdds } from "@/lib/probability";
 import { isDrawablePrize, isPoolVisiblePrize } from "@/lib/blindbox-prize-utils";
 import { displayPrizeName } from "@/lib/prize-display";
-import { injectConfigPrice } from "@/lib/locale-resolve";
 import type { BlindBoxPrize } from "@/types/blindbox";
 
 type Config = {
@@ -24,7 +23,7 @@ export default function BlindBoxPageClient({ config, prizes }: Props) {
   const { messages: m, locale } = useI18n();
   const b = m.blindBox;
   const steps = [
-    injectConfigPrice(b.step1, config.price, locale),
+    b.step1.replace("$60", `$${config.price}`),
     b.step2,
     b.step3,
   ];
@@ -32,7 +31,7 @@ export default function BlindBoxPageClient({ config, prizes }: Props) {
   const visiblePrizes = prizes
     .filter(isPoolVisiblePrize)
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-  const loc = locale === "ms" ? "ms" : locale === "zh" ? "zh" : "en";
+  const loc = locale === "zh" ? "zh" : "en";
 
   return (
     <>

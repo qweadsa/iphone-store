@@ -116,20 +116,19 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function getBlindBoxPrizes(): Promise<BlindBoxPrize[]> {
-  if (isDatabaseConfigured) {
-    try {
-      const rows = await prisma.blindBoxPrize.findMany({
-        where: { active: true },
-        orderBy: { sortOrder: "asc" },
-      });
-      if (rows.length) {
-        return rows.map(mapDbPrize);
-      }
-    } catch {
-      /* fall through */
-    }
+  if (!isDatabaseConfigured) {
+    return DEFAULT_PRIZES;
   }
-  return DEFAULT_PRIZES;
+  try {
+    const rows = await prisma.blindBoxPrize.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+    });
+    return rows.map(mapDbPrize);
+  } catch (err) {
+    console.error("[cms] getBlindBoxPrizes DB error:", err);
+    return [];
+  }
 }
 
 export async function getBlindBoxConfig() {

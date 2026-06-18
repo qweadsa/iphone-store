@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatPrice } from "@/lib/products";
@@ -7,8 +8,8 @@ import { useUser } from "@/lib/user-context";
 import { useI18n } from "@/lib/i18n-context";
 import type { PaymentPurpose } from "@/lib/payments/types";
 import type { MethodQr } from "@/lib/payments/types";
-import { CHECKOUT_METHODS, DEFAULT_CHECKOUT_METHOD, type PaymentMethodId } from "@/lib/payments/methods";
-import DuitNowQrPanel from "@/components/DuitNowQrPanel";
+import { CHECKOUT_METHODS, type PaymentMethodId } from "@/lib/payments/methods";
+import { getPaymentTransferRef } from "@/lib/payment-ref";
 import PaymentMethodIcon from "./PaymentMethodIcon";
 
 type Props = {
@@ -29,7 +30,7 @@ type PaymentData = {
 
 type PayPhase = "loading" | "balance_ok" | "balance_low" | "guest_qr";
 
-const DEFAULT_METHOD: PaymentMethodId = DEFAULT_CHECKOUT_METHOD;
+const DEFAULT_METHOD: PaymentMethodId = "paypal";
 
 export default function PaymentModal({
   amount,
@@ -53,6 +54,7 @@ export default function PaymentModal({
   const [awaitingConfirm, setAwaitingConfirm] = useState(false);
   const [guestEmail, setGuestEmail] = useState("");
   const [emailSaved, setEmailSaved] = useState(false);
+  const [copiedRef, setCopiedRef] = useState(false);
   const createdRef = useRef(false);
   const completedRef = useRef(false);
   const paymentIdRef = useRef<string | null>(null);
@@ -81,19 +83,17 @@ export default function PaymentModal({
   }, [payLoading, userLoading, user, amount, purpose]);
 
   const methodLabel = (id: PaymentMethodId) => {
-    const labels: Record<string, string> = {
-      duitnow: p.methodDuitNow,
-      tng: p.methodTng,
-      grabpay: p.methodGrabPay,
-      shopeepay: p.methodShopeePay,
+    const labels: Record<PaymentMethodId, string> = {
       visa: p.methodVisa,
       paypal: p.methodPayPal,
       crypto: p.methodCrypto,
       balance: p.balance,
       qr: p.qr,
     };
-    return labels[id] ?? CHECKOUT_METHODS.find((m) => m.id === id)?.short ?? id;
+    return labels[id] ?? id;
   };
+
+  const selectedLabel = methodLabel(selected);
 
   function isValidGuestEmail(value: string) {
     const email = value.trim().toLowerCase();
@@ -129,12 +129,7 @@ export default function PaymentModal({
         }
         setPayment(data);
         paymentIdRef.current = data.paymentId;
-        if (data.status === "completed") {
-          completedRef.current = true;
-          onSuccessRef.current(data.paymentId);
-          return;
-        }
-        setActiveQr(data.methodQrs?.[DEFAULT_CHECKOUT_METHOD] ?? null);
+        setActiveQr(data.methodQrs?.paypal ?? null);
         if (!user) setEmailSaved(true);
       } catch {
         createdRef.current = false;
@@ -300,27 +295,27 @@ export default function PaymentModal({
   const guestCanPay = !!user ? !!payment : !!payment && emailSaved;
   const waitingForGuestEmail = !user && !userLoading && !isValidGuestEmail(guestEmail);
   const preparingPayment = userLoading || payLoading || (!user && isValidGuestEmail(guestEmail) && !payment);
+  const transferRef = payment ? getPaymentTransferRef(payment.paymentId) : "";
 
-  const isDuitNowFlow = showQrFlow && selected === "duitnow";
+  async function copyTransferRef() {
+    if (!transferRef) return;
+    try {
+      await navigator.clipboard.writeText(transferRef);
+      setCopiedRef(true);
+      window.setTimeout(() => setCopiedRef(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-[#0a0a12] text-[#F5F5F7] shadow-2xl sm:rounded-2xl">
-        <div
-          className={`border-b px-5 py-4 ${
-            isDuitNowFlow && guestCanPay
-              ? "border-[#ED0677]/25 bg-gradient-to-r from-[#ED0677]/20 via-[#d9056f]/10 to-transparent"
-              : "border-white/10 bg-gradient-to-r from-[#FFB800]/10 to-transparent"
-          }`}
-        >
+        <div className="border-b border-white/10 bg-gradient-to-r from-[#FFB800]/10 to-transparent px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p
-                className={`text-[11px] font-semibold uppercase tracking-widest ${
-                  isDuitNowFlow && guestCanPay ? "text-[#ff6eb4]" : "text-[#FFB800]"
-                }`}
-              >
-                {isDuitNowFlow && guestCanPay ? p.duitnowCheckoutBadge : p.secureCheckout}
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-[#FFB800]">
+                {p.secureCheckout}
               </p>
               <h2 className="mt-1 text-lg font-bold text-white">{title}</h2>
               <p className="mt-1 text-3xl font-bold text-[#FFB800]">
@@ -418,19 +413,26 @@ export default function PaymentModal({
 
               {guestCanPay && showQrFlow && (
                 <div className="mt-4">
-                  {CHECKOUT_METHODS.length > 1 && (
-                    <MethodTabs
-                      selected={selected}
-                      onSelect={setSelected}
-                      label={p.selectMethod}
-                      methodLabel={methodLabel}
-                    />
-                  )}
-                  <DuitNowQrPanel
+                  <PaymentRefBanner
+                    transferRef={transferRef}
+                    label={p.paymentRefLabel}
+                    hint={p.transferMemoHint}
+                    copyLabel={p.copyRef}
+                    copiedLabel={p.copied}
+                    copied={copiedRef}
+                    onCopy={() => void copyTransferRef()}
+                  />
+                  <MethodTabs
+                    selected={selected}
+                    onSelect={setSelected}
+                    label={p.selectMethod}
+                    methodLabel={methodLabel}
+                  />
+                  <QrPanel
                     loading={qrLoading || payLoading}
                     activeQr={activeQr}
+                    selectedLabel={selectedLabel}
                     amount={amount}
-                    paymentId={payment.paymentId}
                     receiveNote={payment.receiveNote}
                     p={p}
                   />
@@ -447,21 +449,22 @@ export default function PaymentModal({
               )}
 
               {requireAdminConfirm && showQrFlow && guestCanPay && (
-                <div className="mt-4 overflow-hidden rounded-xl border border-[#ED0677]/35 bg-gradient-to-br from-[#fdf2f8] to-[#fce7f3]">
-                  <div className="bg-[#ED0677] px-4 py-2">
-                    <p className="text-center text-[12px] font-bold text-white">
-                      {p.awaitingMerchant}
+                <div className="mt-4 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 text-center">
+                  <p className="text-sm font-medium text-blue-200">
+                    {p.awaitingMerchant}
+                  </p>
+                  <p className="mt-1 text-xs text-blue-200/70">
+                    {awaitingConfirm ? p.awaitingMerchantHint : p.merchantConfirmed}
+                  </p>
+                  {transferRef && (
+                    <p className="mt-2 font-mono text-sm font-bold tracking-wider text-blue-100">
+                      {transferRef}
                     </p>
-                  </div>
-                  <div className="px-4 py-3 text-center">
-                    <p className="text-[12px] font-medium text-[#9d174d]">
-                      {awaitingConfirm ? p.awaitingMerchantHint : p.merchantConfirmed}
-                    </p>
-                    <div className="mt-3 flex justify-center gap-1.5">
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-[#ED0677]" />
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-[#ED0677] [animation-delay:150ms]" />
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-[#ED0677] [animation-delay:300ms]" />
-                    </div>
+                  )}
+                  <div className="mt-3 flex justify-center gap-1">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400" />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400 [animation-delay:150ms]" />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400 [animation-delay:300ms]" />
                   </div>
                 </div>
               )}
@@ -488,13 +491,124 @@ export default function PaymentModal({
                 type="button"
                 onClick={() => confirmQrPaid(selected)}
                 disabled={paying || qrLoading || !activeQr}
-                className="w-full rounded-xl bg-gradient-to-r from-[#ED0677] to-[#b8005c] py-3.5 text-sm font-bold text-white disabled:opacity-50"
+                className="w-full rounded-xl bg-gradient-to-r from-[#FFB800] to-[#FF7A00] py-3.5 text-sm font-bold text-[#03030A] disabled:opacity-50"
               >
                 {paying ? p.processing : p.confirmPaid}
               </button>
             </div>
           )}
       </div>
+    </div>
+  );
+}
+
+function PaymentRefBanner({
+  transferRef,
+  label,
+  hint,
+  copyLabel,
+  copiedLabel,
+  copied,
+  onCopy,
+}: {
+  transferRef: string;
+  label: string;
+  hint: string;
+  copyLabel: string;
+  copiedLabel: string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  if (!transferRef) return null;
+
+  return (
+    <div className="mb-4 rounded-xl border border-[#FFB800]/40 bg-[#FFB800]/10 p-4">
+      <p className="text-xs font-semibold text-[#FFB800]">{label}</p>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="font-mono text-xl font-black tracking-wider text-white">{transferRef}</p>
+        <button
+          type="button"
+          onClick={onCopy}
+          className="shrink-0 rounded-lg border border-[#FFB800]/50 px-3 py-1.5 text-xs font-semibold text-[#FFB800] hover:bg-[#FFB800]/15"
+        >
+          {copied ? copiedLabel : copyLabel}
+        </button>
+      </div>
+      <p className="mt-2 text-[11px] leading-relaxed text-[#FFB800]/85">{hint}</p>
+    </div>
+  );
+}
+
+function QrPanel({
+  loading,
+  activeQr,
+  selectedLabel,
+  amount,
+  receiveNote,
+  p,
+}: {
+  loading: boolean;
+  activeQr: MethodQr | null;
+  selectedLabel: string;
+  amount: number;
+  receiveNote?: string | null;
+  p: Record<string, string>;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-4 flex h-[260px] items-center justify-center rounded-xl border border-white/10 bg-white/5">
+        <p className="text-sm text-white/40">{p.loading}</p>
+      </div>
+    );
+  }
+  if (!activeQr) {
+    return (
+      <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center text-sm text-red-300">
+        {p.error}
+      </div>
+    );
+  }
+
+  const isStatic = activeQr.staticImage || activeQr.qrDataUrl.startsWith("/");
+  const hideUrl =
+    !activeQr.url ||
+    activeQr.url.includes("/pay/PAY-") ||
+    activeQr.url.startsWith("/");
+
+  return (
+    <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-white">
+          {p.scanToPay} {selectedLabel}
+        </p>
+        <span className="rounded-full bg-[#FFB800]/20 px-2 py-0.5 text-xs font-semibold text-[#FFB800]">
+          {formatPrice(amount)}
+        </span>
+      </div>
+      <div className="mt-4 flex justify-center">
+        <div className="rounded-2xl bg-white p-3 shadow-lg">
+          <Image
+            src={activeQr.qrDataUrl}
+            alt={`${selectedLabel} QR`}
+            width={200}
+            height={200}
+            className="rounded-lg"
+            unoptimized
+          />
+        </div>
+      </div>
+
+      {!isStatic && !hideUrl && activeQr.url && (
+        <p className="mt-3 break-all text-center text-[11px] text-[#FFB800]/80">
+          <a href={activeQr.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+            {p.openPayLink}
+          </a>
+        </p>
+      )}
+
+      {receiveNote && (
+        <p className="mt-3 text-center text-xs text-white/40">{receiveNote}</p>
+      )}
     </div>
   );
 }

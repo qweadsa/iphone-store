@@ -11,6 +11,10 @@ export async function POST(req: Request) {
 
   const form = await req.formData();
   const file = form.get("file");
+  const preserveOriginal =
+    form.get("preserveOriginal") === "1" ||
+    form.get("preserveOriginal") === "true" ||
+    form.get("cutout") === "false";
 
   if (!file || !(file instanceof File)) {
     return NextResponse.json({ error: "请选择图片" }, { status: 400 });
@@ -20,7 +24,7 @@ export async function POST(req: Request) {
     const ext = imageExtFromFile(file) ?? "jpg";
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const url = await saveImageToPublic(file, "uploads", filename, {
-      removeLightBackground: true,
+      removeLightBackground: !preserveOriginal,
     });
     return NextResponse.json({ url });
   } catch (e) {

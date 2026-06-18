@@ -13,23 +13,10 @@ import {
   type PublicWinnerRow,
 } from "@/lib/blindbox-public";
 import { isPoolVisiblePrize, isDrawablePrize } from "@/lib/blindbox-prize-utils";
-import {
-  buildPoolHighlightChips,
-  resolveGrandPrizeDisplay,
-} from "@/lib/grand-prize-display";
-import { resolveHeroShowcaseFrames } from "@/lib/hero-showcase";
 import { displayPrizeName } from "@/lib/prize-display";
 import { getPrizeImageUrl } from "@/lib/prize-images";
 import PrizeVisual from "@/components/PrizeVisual";
 import { getPrizeDisplayOdds } from "@/lib/probability";
-import { injectConfigPrice } from "@/lib/locale-resolve";
-import BlindBoxOpenPrice from "@/components/BlindBoxOpenPrice";
-import { useBlindBoxCheckout } from "@/lib/use-blindbox-checkout";
-import {
-  formatDemoWinnerTimeLabel,
-  resolveDemoWinnerMinutesAgo,
-  type DemoWinnerEntry,
-} from "@/lib/demo-winners";
 import type { BlindBoxPrize } from "@/types/blindbox";
 import type { Product } from "@/types/product";
 
@@ -45,7 +32,7 @@ function PoolPrizeCard({
   featured?: boolean;
 }) {
   const name = displayPrizeName(prize, locale);
-  const odds = getPrizeDisplayOdds(prize, drawWeight, locale);
+  const odds = getPrizeDisplayOdds(prize, drawWeight, locale === "zh" ? "zh" : "en");
 
   return (
     <div
@@ -107,9 +94,7 @@ type Config = {
   heroTitle?: string;
   heroSubtitle?: string;
   grandPrizeImageUrl?: string | null;
-  heroShowcase?: { src: string; label?: string; wide?: boolean }[];
   winnersDemoMode?: boolean;
-  demoWinners?: DemoWinnerEntry[];
 };
 
 type Stats = {
@@ -140,15 +125,6 @@ export default function BlindBoxLanding({
   const l = m.landing;
   const mob = l.mobile;
   const a = m.auth;
-  const checkout = useBlindBoxCheckout(config.price);
-  const grandPrize = useMemo(
-    () => resolveGrandPrizeDisplay(config, prizes),
-    [config, prizes],
-  );
-  const showcaseFrames = useMemo(
-    () => resolveHeroShowcaseFrames(config.heroShowcase),
-    [config.heroShowcase],
-  );
 
   const drawWeight = prizes.filter(isDrawablePrize).reduce((s, p) => s + p.weight, 0);
   const visiblePrizes = useMemo(
@@ -181,16 +157,6 @@ export default function BlindBoxLanding({
   ];
 
   const winnerItems = useMemo(() => {
-    if (config.winnersDemoMode !== false) {
-      const demos = config.demoWinners ?? [];
-      return demos.map((row, i) => ({
-        id: `demo-${i}`,
-        text: row.text,
-        isGrand: !!row.isGrand,
-        timeLabel: formatDemoWinnerTimeLabel(resolveDemoWinnerMinutesAgo(row, i)),
-        icon: row.isGrand ? "🏆" : row.text.toLowerCase().includes("kredit") ? "💰" : "🎁",
-      }));
-    }
     const nowMs = renderedAt ?? Date.now();
     if (publicWinners.length > 0) {
       return publicWinners.map((r) => ({
@@ -201,19 +167,42 @@ export default function BlindBoxLanding({
         icon: r.prizeType === "grand" ? "🏆" : r.prizeType === "credit" ? "💰" : "🎁",
       }));
     }
+    if (config.winnersDemoMode !== false) {
+      return l.winners.map((text, i) => ({
+        id: `demo-${i}`,
+        text,
+        isGrand: text.toLowerCase().includes("iphone") || text.includes("大奖"),
+        timeLabel: i === 0 ? (locale === "zh" ? "刚刚" : "Just now") : locale === "zh" ? `${i * 2} 分钟前` : `${i * 2} min ago`,
+        icon: text.toLowerCase().includes("iphone") ? "🏆" : "🎁",
+      }));
+    }
     return [];
-  }, [publicWinners, config.winnersDemoMode, config.demoWinners, locale, renderedAt]);
+  }, [publicWinners, config.winnersDemoMode, locale, l.winners, renderedAt]);
 
-  const floatingChips = useMemo(
-    () => buildPoolHighlightChips(prizes, locale, grandPrize.prizeKey),
-    [prizes, locale, grandPrize.prizeKey],
-  );
+  const floatingChips = useMemo(() => {
+    const legendary = prizes.find((p) => p.tier === "legendary" && isPoolVisiblePrize(p));
+    const epic = prizes.find((p) => p.tier === "epic" && isPoolVisiblePrize(p));
+    const rare = prizes.find((p) => p.tier === "rare" && isPoolVisiblePrize(p));
+    return [
+      {
+        label: legendary ? displayPrizeName(legendary, locale) : "iPhone 17 Pro Max",
+        emoji: legendary?.emoji ?? "📱",
+        className: "top-2 right-2",
+      },
+      {
+        label: epic ? displayPrizeName(epic, locale) : "MacBook Pro",
+        emoji: epic?.emoji ?? "💻",
+        className: "bottom-4 left-2",
+      },
+      {
+        label: rare ? displayPrizeName(rare, locale) : "RTX 4090",
+        emoji: rare?.emoji ?? "🎮",
+        className: "top-[18%] -right-2",
+      },
+    ];
+  }, [prizes, locale]);
 
-  const steps = [
-    injectConfigPrice(b.step1, config.price, locale),
-    b.step2,
-    b.step3,
-  ];
+  const steps = [b.step1.replace("$60", `$${config.price}`), b.step2, b.step3];
 
   const trustItems = [
     { icon: "🔒", title: l.trustSecure },
@@ -241,7 +230,7 @@ export default function BlindBoxLanding({
   return (
     <div className="bg-[#03030A] pb-24 text-[#F5F5F7] md:pb-0">
       <MobileFixedCta
-        fullPrice={config.price}
+        price={config.price}
         priceLabel={l.perOpen}
         buttonLabel={l.fixedCtaBtn}
       />
@@ -267,11 +256,12 @@ export default function BlindBoxLanding({
             </h1>
 
             <p className="mt-3 max-w-lg text-[15px] leading-[1.55] text-[rgba(245,245,247,0.72)]">
-              {injectConfigPrice(config.heroSubtitle ?? mob.subtitle, config.price, locale)}
+              {mob.subtitle}
             </p>
 
-            <div className="mt-5 lg:mt-4">
-              <BlindBoxOpenPrice fullPrice={config.price} size="hero" perOpenLabel={l.perOpen} />
+            <div className="mt-5 flex items-baseline gap-1.5">
+              <span className="text-[40px] font-black text-[#FFB800] lg:text-[44px]">${config.price}</span>
+              <span className="text-[14px] text-white/55">{l.perOpen}</span>
             </div>
 
             <div className="mt-[18px] flex flex-col gap-3 sm:max-w-md">
@@ -279,7 +269,7 @@ export default function BlindBoxLanding({
                 href="#draw"
                 className="cta-breathe flex h-[58px] w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] text-[16px] font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
               >
-                {injectConfigPrice(b.drawNow, checkout.cashDue, locale)}
+                {b.drawNow.replace("$60", `$${config.price}`)}
               </a>
               <a
                 href="#prizes"
@@ -323,14 +313,14 @@ export default function BlindBoxLanding({
 
           {/* 右侧：大奖 + 数据 + 实时名单 */}
           <HeroRewardPanel
-            grandPrizeName={grandPrize.name}
-            grandPrizeValue={grandPrize.value}
+            grandPrizeName={config.grandPrizeName}
+            grandPrizeValue={config.grandPrizeValue}
+            grandPrizeImageUrl={config.grandPrizeImageUrl}
             grandPrizeStatus={stats?.grandPrizeStatus ?? "available"}
             grandStatusLabel={grandStatusLabel}
             statsCards={statsCards}
             winnerItems={winnerItems}
             floatingChips={floatingChips}
-            showcaseFrames={showcaseFrames}
             showStats
             statsDesktopOnly
             labels={panelLabels}
@@ -344,10 +334,8 @@ export default function BlindBoxLanding({
         className="border-t border-white/[0.08] bg-gradient-to-b from-[#050507] to-[#03030A] py-14 md:py-20"
       >
         <div className="mx-auto max-w-3xl px-4 text-center md:px-6">
-          <h2 className="text-[26px] font-black md:text-4xl">{config.heroTitle ?? b.pageTitle}</h2>
-          <p className="mt-2 text-[14px] text-white/55">
-            {injectConfigPrice(config.heroSubtitle ?? b.pageSubtitle, config.price, locale)}
-          </p>
+          <h2 className="text-[26px] font-black md:text-4xl">{b.pageTitle}</h2>
+          <p className="mt-2 text-[14px] text-white/55">{b.pageSubtitle}</p>
         </div>
         <BlindBoxGame prizes={prizes} config={config} theme="dark" />
       </section>
@@ -422,7 +410,7 @@ export default function BlindBoxLanding({
                       {prize.emoji} {displayPrizeName(prize, locale)}
                     </td>
                     <td className="px-4 py-3 font-medium text-[#FFB800]">
-                      {getPrizeDisplayOdds(prize, drawWeight, locale)}
+                      {getPrizeDisplayOdds(prize, drawWeight, locale === "zh" ? "zh" : "en")}
                     </td>
                   </tr>
                 ))}
@@ -483,13 +471,13 @@ export default function BlindBoxLanding({
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-black">{l.ctaTitle}</h2>
           <p className="mt-3 text-white/60">
-            {grandPrize.name} · {grandPrize.value}
+            {config.grandPrizeName} · {config.grandPrizeValue}
           </p>
           <a
             href="#draw"
             className="cta-breathe mt-8 inline-block rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-12 py-4 text-base font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
           >
-            {injectConfigPrice(b.drawNow, checkout.cashDue, locale)}
+            {b.drawNow.replace("$60", `$${config.price}`)}
           </a>
         </div>
       </section>
