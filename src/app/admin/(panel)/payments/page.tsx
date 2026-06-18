@@ -106,18 +106,29 @@ export default function ReceiveSettingsPage() {
   const [activePaying, setActivePaying] = useState<ActivePayment[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 30;
   const [msg, setMsg] = useState("");
   const [uploading, setUploading] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
 
   const loadPayments = useCallback(async () => {
-    const res = await fetch(`/api/admin/payments/orders?status=${statusFilter}`);
+    const params = new URLSearchParams({
+      status: statusFilter,
+      page: String(page),
+      limit: String(pageSize),
+    });
+    const res = await fetch(`/api/admin/payments/orders?${params}`);
     const data = await res.json();
     if (data.payments) setPayments(data.payments);
     if (data.active) setActivePaying(data.active);
     if (typeof data.pendingCount === "number") setPendingCount(data.pendingCount);
-  }, [statusFilter]);
+    if (typeof data.totalCount === "number") setTotalCount(data.totalCount);
+    if (typeof data.totalPages === "number") setTotalPages(data.totalPages);
+  }, [statusFilter, page]);
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -307,7 +318,10 @@ export default function ReceiveSettingsPage() {
           </div>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
             className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
           >
             <option value="all">全部记录</option>
@@ -377,6 +391,32 @@ export default function ReceiveSettingsPage() {
           );
           })}
         </div>
+
+        {totalCount > 0 && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+            <p className="text-sm text-white/45">
+              共 {totalCount} 条 · 第 {page} / {totalPages} 页 · 每页 {pageSize} 条
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                上一页
+              </button>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded-lg border border-white/15 px-3 py-1.5 text-sm text-white/70 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-6">

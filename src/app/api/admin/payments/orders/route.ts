@@ -24,12 +24,16 @@ export async function GET(req: Request) {
 
   const limitRaw = Number(searchParams.get("limit") ?? "30");
   const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 10), 100) : 30;
+  const pageRaw = Number(searchParams.get("page") ?? "1");
+  const page = Number.isFinite(pageRaw) ? Math.max(1, Math.floor(pageRaw)) : 1;
+  const skip = (page - 1) * limit;
 
   const [totalCount, rows] = await Promise.all([
     prisma.payment.count({ where }),
     prisma.payment.findMany({
       where,
       orderBy: { createdAt: "desc" },
+      skip,
       take: limit,
       include: {
         user: { select: { id: true, name: true, email: true } },
@@ -86,5 +90,13 @@ export async function GET(req: Request) {
     transferRef: getPaymentTransferRef(p.paymentId, p.metadata),
   }));
 
-  return NextResponse.json({ payments, pendingCount, active, totalCount, limit });
+  return NextResponse.json({
+    payments,
+    pendingCount,
+    active,
+    totalCount,
+    limit,
+    page,
+    totalPages: Math.max(1, Math.ceil(totalCount / limit)),
+  });
 }
