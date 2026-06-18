@@ -6,6 +6,7 @@ import BlindBoxGame from "@/components/BlindBoxGame";
 import HeroRewardPanel from "@/components/landing/HeroRewardPanel";
 import MobileFixedCta from "@/components/landing/MobileFixedCta";
 import { useI18n } from "@/lib/i18n-context";
+import { formatMarketPrice, injectConfigPrice } from "@/lib/locale-resolve";
 import {
   formatPublicWinnerLine,
   formatTimeAgo,
@@ -202,7 +203,9 @@ export default function BlindBoxLanding({
     ];
   }, [prizes, locale]);
 
-  const steps = [b.step1.replace("$60", `$${config.price}`), b.step2, b.step3];
+  const steps = [injectConfigPrice(b.step1, config.price, locale), b.step2, b.step3];
+  const drawNowLabel = injectConfigPrice(b.drawNow, config.price, locale);
+  const priceLabel = formatMarketPrice(config.price, locale);
 
   const trustItems = [
     { icon: "🔒", title: l.trustSecure },
@@ -260,7 +263,7 @@ export default function BlindBoxLanding({
             </p>
 
             <div className="mt-5 flex items-baseline gap-1.5">
-              <span className="text-[40px] font-black text-[#FFB800] lg:text-[44px]">${config.price}</span>
+              <span className="text-[40px] font-black text-[#FFB800] lg:text-[44px]">{priceLabel}</span>
               <span className="text-[14px] text-white/55">{l.perOpen}</span>
             </div>
 
@@ -269,7 +272,7 @@ export default function BlindBoxLanding({
                 href="#draw"
                 className="cta-breathe flex h-[58px] w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] text-[16px] font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
               >
-                {b.drawNow.replace("$60", `$${config.price}`)}
+                {drawNowLabel}
               </a>
               <a
                 href="#prizes"
@@ -476,7 +479,7 @@ export default function BlindBoxLanding({
             href="#draw"
             className="cta-breathe mt-8 inline-block rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-12 py-4 text-base font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
           >
-            {b.drawNow.replace("$60", `$${config.price}`)}
+            {drawNowLabel}
           </a>
         </div>
       </section>

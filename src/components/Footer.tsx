@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n-context";
+import { normalizeMarketText } from "@/lib/market";
 
 export default function Footer() {
   const { messages: m } = useI18n();
@@ -13,7 +14,7 @@ export default function Footer() {
           <div>
             <p className="text-lg font-semibold">🎁 Mystery Box</p>
             <p className="mt-2 text-sm text-white/50">
-              $60 to win iPhone 17 Pro Max. Free global shipping.
+              {normalizeMarketText("$60 to win iPhone 17 Pro Max. Free global shipping.")}
             </p>
           </div>
           <div>

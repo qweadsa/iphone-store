@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import HeroShowcaseEditor from "@/components/admin/HeroShowcaseEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { getPrizeRealOdds } from "@/lib/probability";
+import { formatAdminPrice } from "@/lib/market";
+import { parseHeroShowcaseJson, serializeHeroShowcase, type HeroShowcaseEntry } from "@/lib/hero-showcase";
 
 type Prize = {
   id: number;
@@ -29,6 +32,7 @@ type Config = {
   heroTitle: string | null;
   heroSubtitle: string | null;
   grandPrizeImageUrl: string | null;
+  heroShowcase: HeroShowcaseEntry[];
   seoTitle: string | null;
   seoDescription: string | null;
   dailyLimit: number;
@@ -125,7 +129,10 @@ export default function BlindBoxAdminPage() {
         setMsg(`❌ 加载失败：${d.error || "请重新登录后台"}`);
         return;
       }
-      setConfig(d.config);
+      setConfig({
+        ...d.config,
+        heroShowcase: parseHeroShowcaseJson(d.config?.heroShowcaseJson),
+      });
       setPrizes((d.prizes ?? []).map((p: Record<string, unknown>) => normalizePrize(p)));
       setFrontendPoolCount(poolCount);
     });
@@ -148,10 +155,18 @@ export default function BlindBoxAdminPage() {
   async function saveConfig() {
     if (!config) return;
     setMsg("保存中...");
+    const { heroShowcase, ...rest } = config;
     const res = await fetch("/api/admin/blindbox", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(config),
+      body: JSON.stringify({
+        ...rest,
+        heroShowcaseJson: serializeHeroShowcase(heroShowcase),
+        grandPrizeImageUrl:
+          rest.grandPrizeImageUrl?.trim() ||
+          heroShowcase.find((frame) => frame.src.trim())?.src ||
+          null,
+      }),
     });
     const data = (await res.json().catch(() => ({}))) as { error?: string };
     setMsg(res.ok ? "✅ 盲盒设置已保存" : `❌ ${data.error || "保存失败"}`);
@@ -347,13 +362,16 @@ export default function BlindBoxAdminPage() {
           <h2 className="font-semibold">盲盒设置</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="text-white/70">抽奖价格 (USD)</span>
+              <span className="text-white/70">抽奖价格 (RM)</span>
               <input
                 type="number"
                 value={config.price}
                 onChange={(e) => setConfig({ ...config, price: Number(e.target.value) })}
                 className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
               />
+              <span className="mt-1 block text-xs text-white/35">
+                前台显示为 {formatAdminPrice(config.price)}
+              </span>
             </label>
             <label className="block text-sm">
               <span className="text-white/70">终极大奖名称</span>
@@ -415,11 +433,9 @@ export default function BlindBoxAdminPage() {
               className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
             />
           </label>
-          <ImageUpload
-            label="首页主图（右侧大奖展示图）"
-            hint="建议 512×512 以上。上传成功后务必点「保存盲盒设置」。"
-            value={config.grandPrizeImageUrl ?? ""}
-            onChange={(url) => setConfig({ ...config, grandPrizeImageUrl: url || null })}
+          <HeroShowcaseEditor
+            value={config.heroShowcase ?? []}
+            onChange={(heroShowcase) => setConfig({ ...config, heroShowcase })}
           />
           <button
             onClick={saveConfig}

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { adminApiErrorMessage } from "@/lib/admin-api-error";
+import { DEFAULT_GRAND_PRIZE_VALUE, DEFAULT_BLIND_BOX_PRICE } from "@/lib/market";
 
 export async function GET() {
   try {
@@ -34,6 +35,7 @@ export async function PUT(req: Request) {
         heroTitle: body.heroTitle,
         heroSubtitle: body.heroSubtitle,
         grandPrizeImageUrl: body.grandPrizeImageUrl,
+        heroShowcaseJson: body.heroShowcaseJson ?? undefined,
         seoTitle: body.seoTitle,
         seoDescription: body.seoDescription,
         dailyLimit: body.dailyLimit ?? 0,
@@ -41,13 +43,14 @@ export async function PUT(req: Request) {
       },
       create: {
         id: 1,
-        price: body.price ?? 60,
+        price: body.price ?? DEFAULT_BLIND_BOX_PRICE,
         enabled: body.enabled ?? true,
         grandPrizeName: body.grandPrizeName ?? "iPhone 17 Pro Max",
-        grandPrizeValue: body.grandPrizeValue ?? "$1,199",
+        grandPrizeValue: body.grandPrizeValue ?? DEFAULT_GRAND_PRIZE_VALUE,
         heroTitle: body.heroTitle,
         heroSubtitle: body.heroSubtitle,
         grandPrizeImageUrl: body.grandPrizeImageUrl,
+        heroShowcaseJson: body.heroShowcaseJson ?? undefined,
         seoTitle: body.seoTitle,
         seoDescription: body.seoDescription,
         dailyLimit: body.dailyLimit ?? 0,
