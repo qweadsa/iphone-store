@@ -4,6 +4,7 @@ import {
   getTrafficStats,
   resetAllTrafficData,
   resetLiveTrafficCount,
+  resetTrafficPeriod,
   startLiveTrafficCount,
 } from "@/lib/site-analytics";
 
@@ -44,6 +45,18 @@ export async function POST(req: Request) {
 
     if (action === "reset-all") {
       await resetAllTrafficData();
+      const stats = await getTrafficStats();
+      return NextResponse.json({ ok: true, stats });
+    }
+
+    if (action === "reset-today") {
+      await resetTrafficPeriod("today");
+      const stats = await getTrafficStats();
+      return NextResponse.json({ ok: true, stats });
+    }
+
+    if (action === "reset-last-hour") {
+      await resetTrafficPeriod("last-hour");
       const stats = await getTrafficStats();
       return NextResponse.json({ ok: true, stats });
     }

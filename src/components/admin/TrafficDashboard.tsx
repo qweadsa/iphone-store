@@ -50,11 +50,15 @@ function StatCard({
   visitors,
   pageViews,
   highlight = false,
+  onReset,
+  resetDisabled = false,
 }: {
   label: string;
   visitors: number;
   pageViews: number;
   highlight?: boolean;
+  onReset?: () => void;
+  resetDisabled?: boolean;
 }) {
   return (
     <div
@@ -64,7 +68,19 @@ function StatCard({
           : "border-white/10 bg-white/5"
       }`}
     >
-      <p className="text-sm text-white/50">{label}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm text-white/50">{label}</p>
+        {onReset && (
+          <button
+            type="button"
+            disabled={resetDisabled}
+            onClick={onReset}
+            className="shrink-0 rounded-md border border-white/15 px-2 py-0.5 text-[11px] text-white/55 hover:bg-white/5 disabled:opacity-40"
+          >
+            重置
+          </button>
+        )}
+      </div>
       <p className="mt-3 text-4xl font-black text-amber-400">{visitors.toLocaleString()}</p>
       <p className="mt-1 text-xs text-white/45">独立访客</p>
       <p className="mt-3 text-lg font-semibold text-white/80">{pageViews.toLocaleString()}</p>
@@ -96,13 +112,21 @@ export default function TrafficDashboard() {
     return () => window.clearInterval(id);
   }, [load, page]);
 
-  async function runAction(action: "start-live" | "reset-live" | "reset-all") {
-    if (action === "reset-all") {
-      const ok = window.confirm(
-        "确定清空全部访问记录吗？\n\n将删除今日累计、最近 1 小时、本场直播的所有浏览数据，且无法恢复。",
-      );
-      if (!ok) return;
-    }
+  async function runAction(
+    action: "start-live" | "reset-live" | "reset-all" | "reset-today" | "reset-last-hour",
+  ) {
+    const confirmMessages: Partial<Record<typeof action, string>> = {
+      "reset-all":
+        "确定清空全部访问记录吗？\n\n将删除所有浏览数据并重置直播计数，且无法恢复。",
+      "reset-today":
+        "确定重置「今日累计」吗？\n\n将删除今天 0 点以来的所有访问记录，且无法恢复。",
+      "reset-last-hour":
+        "确定重置「最近 1 小时」吗？\n\n将删除过去 1 小时内的访问记录，且无法恢复。",
+      "reset-live": "确定重置本场直播计数起点吗？\n\n不会删除历史记录，只是重新从 0 开始计本场。",
+    };
+
+    const confirmText = confirmMessages[action];
+    if (confirmText && !window.confirm(confirmText)) return;
 
     setBusy(true);
     setMsg("");
@@ -119,13 +143,14 @@ export default function TrafficDashboard() {
       setStats(data.stats);
       setPage(1);
       setLastUpdated(new Date());
-      setMsg(
-        action === "start-live"
-          ? "✅ 已开始本场直播计数"
-          : action === "reset-live"
-            ? "✅ 已重置直播计数起点（历史记录仍保留）"
-            : "✅ 已清空全部访问数据",
-      );
+      const successMessages: Record<typeof action, string> = {
+        "start-live": "✅ 已开始本场直播计数",
+        "reset-live": "✅ 已重置本场直播计数",
+        "reset-all": "✅ 已清空全部访问数据",
+        "reset-today": "✅ 已重置今日累计",
+        "reset-last-hour": "✅ 已重置最近 1 小时",
+      };
+      setMsg(successMessages[action]);
     } else {
       setMsg(`❌ ${data.error || "操作失败"}`);
     }
@@ -218,18 +243,26 @@ export default function TrafficDashboard() {
           visitors={stats.live.visitors}
           pageViews={stats.live.pageViews}
           highlight
+          resetDisabled={busy}
+          onReset={() => void runAction("reset-live")}
         />
         <StatCard
           label="最近 1 小时"
           visitors={stats.lastHour.visitors}
           pageViews={stats.lastHour.pageViews}
+          resetDisabled={busy}
+          onReset={() => void runAction("reset-last-hour")}
         />
         <StatCard
           label="今日累计"
           visitors={stats.today.visitors}
           pageViews={stats.today.pageViews}
+          resetDisabled={busy}
+          onReset={() => void runAction("reset-today")}
         />
       </div>
+
+      {msg && <p className="text-sm text-white/70">{msg}</p>}
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">

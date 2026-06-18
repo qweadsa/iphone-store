@@ -30,6 +30,14 @@ function startOfToday(): Date {
   return d;
 }
 
+export function getTodayStart(): Date {
+  return startOfToday();
+}
+
+export function getLastHourStart(): Date {
+  return new Date(Date.now() - 60 * 60 * 1000);
+}
+
 export function hashVisitorKey(raw: string): string {
   return createHash("sha256").update(raw).digest("hex").slice(0, 32);
 }
@@ -184,6 +192,18 @@ export async function resetAllTrafficData() {
       update: { liveCountStartedAt: null },
     }),
   ]);
+}
+
+export async function resetTrafficPeriod(period: "today" | "last-hour" | "live") {
+  if (period === "live") {
+    await resetLiveTrafficCount();
+    return;
+  }
+
+  const since = period === "today" ? getTodayStart() : getLastHourStart();
+  await prisma.siteVisit.deleteMany({
+    where: { createdAt: { gte: since } },
+  });
 }
 
 export function shouldTrackVisit(pathname: string): boolean {
