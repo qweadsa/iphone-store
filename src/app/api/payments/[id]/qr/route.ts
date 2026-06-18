@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateMethodQr, getReceiveSettings } from "@/lib/payments/receive-qr";
-import type { PaymentMethodId } from "@/lib/payments/methods";
-import { CHECKOUT_METHODS } from "@/lib/payments/methods";
+import { CHECKOUT_METHODS, DEFAULT_CHECKOUT_METHOD, type PaymentMethodId } from "@/lib/payments/methods";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -10,7 +9,7 @@ export async function GET(req: Request, { params }: Params) {
   try {
     const { id } = await params;
     const { searchParams } = new URL(req.url);
-    const method = (searchParams.get("method") ?? "paypal") as PaymentMethodId;
+    const method = (searchParams.get("method") ?? DEFAULT_CHECKOUT_METHOD) as PaymentMethodId;
 
     if (!CHECKOUT_METHODS.some((m) => m.id === method)) {
       return NextResponse.json({ error: "Invalid method" }, { status: 400 });

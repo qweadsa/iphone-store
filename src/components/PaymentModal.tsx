@@ -8,7 +8,7 @@ import { useUser } from "@/lib/user-context";
 import { useI18n } from "@/lib/i18n-context";
 import type { PaymentPurpose } from "@/lib/payments/types";
 import type { MethodQr } from "@/lib/payments/types";
-import { CHECKOUT_METHODS, getMethodLabel, type PaymentMethodId } from "@/lib/payments/methods";
+import { CHECKOUT_METHODS, DEFAULT_CHECKOUT_METHOD, getMethodLabel, type PaymentMethodId } from "@/lib/payments/methods";
 import { getPaymentTransferRef } from "@/lib/payment-ref";
 import PaymentMethodIcon from "./PaymentMethodIcon";
 
@@ -30,7 +30,8 @@ type PaymentData = {
 
 type PayPhase = "loading" | "balance_ok" | "balance_low" | "guest_qr";
 
-const DEFAULT_METHOD: PaymentMethodId = "paypal";
+const SOLE_CHECKOUT_METHOD = DEFAULT_CHECKOUT_METHOD;
+const HAS_MULTIPLE_METHODS = CHECKOUT_METHODS.length > 1;
 
 export default function PaymentModal({
   amount,
@@ -48,7 +49,7 @@ export default function PaymentModal({
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
   const [payment, setPayment] = useState<PaymentData | null>(null);
-  const [selected, setSelected] = useState<PaymentMethodId>(DEFAULT_METHOD);
+  const [selected, setSelected] = useState<PaymentMethodId>(SOLE_CHECKOUT_METHOD);
   const [activeQr, setActiveQr] = useState<MethodQr | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [awaitingConfirm, setAwaitingConfirm] = useState(false);
@@ -133,7 +134,7 @@ export default function PaymentModal({
         }
         setPayment(data);
         paymentIdRef.current = data.paymentId;
-        setActiveQr(data.methodQrs?.paypal ?? null);
+        setActiveQr(data.methodQrs?.[SOLE_CHECKOUT_METHOD] ?? null);
         if (!user) setEmailSaved(true);
       } catch {
         createdRef.current = false;
@@ -426,16 +427,18 @@ export default function PaymentModal({
                     copied={copiedRef}
                     onCopy={() => void copyTransferRef()}
                   />
-                  <MethodTabs
-                    selected={selected}
-                    onSelect={setSelected}
-                    label={p.selectMethod}
-                    methodLabel={methodLabel}
-                  />
+                  {HAS_MULTIPLE_METHODS && (
+                    <MethodTabs
+                      selected={selected}
+                      onSelect={setSelected}
+                      label={p.selectMethod}
+                      methodLabel={methodLabel}
+                    />
+                  )}
                   <QrPanel
                     loading={qrLoading || payLoading}
                     activeQr={activeQr}
-                    selectedLabel={selectedLabel}
+                    title={HAS_MULTIPLE_METHODS ? `${p.scanToPay} ${selectedLabel}` : p.qrTitle}
                     amount={amount}
                     receiveNote={payment.receiveNote}
                     p={p}
@@ -546,14 +549,14 @@ function PaymentRefBanner({
 function QrPanel({
   loading,
   activeQr,
-  selectedLabel,
+  title,
   amount,
   receiveNote,
   p,
 }: {
   loading: boolean;
   activeQr: MethodQr | null;
-  selectedLabel: string;
+  title: string;
   amount: number;
   receiveNote?: string | null;
   p: Record<string, string>;
@@ -582,9 +585,7 @@ function QrPanel({
   return (
     <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-white">
-          {p.scanToPay} {selectedLabel}
-        </p>
+        <p className="text-sm font-medium text-white">{title}</p>
         <span className="rounded-full bg-[#FFB800]/20 px-2 py-0.5 text-xs font-semibold text-[#FFB800]">
           {formatPrice(amount)}
         </span>
@@ -593,7 +594,7 @@ function QrPanel({
         <div className="rounded-2xl bg-white p-3 shadow-lg">
           <Image
             src={activeQr.qrDataUrl}
-            alt={`${selectedLabel} QR`}
+            alt={title}
             width={200}
             height={200}
             className="rounded-lg"

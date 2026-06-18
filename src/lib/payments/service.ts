@@ -7,6 +7,7 @@ import {
   getPayPalClientId,
 } from "./paypal";
 import { generateMethodQr, getReceiveSettings } from "./receive-qr";
+import { DEFAULT_CHECKOUT_METHOD } from "./methods";
 import { getPaymentRequireAdminConfirm } from "./settings";
 import type { CreatePaymentInput, PaymentResult } from "./types";
 
@@ -71,9 +72,9 @@ export async function createPayment(
   const receiveSettings = await getReceiveSettings();
   const requireAdminConfirm = await getPaymentRequireAdminConfirm();
 
-  // 只预生成默认 PayPal 二维码，其余方式按需加载，避免卡顿
+  // 预生成默认扫码（DuitNow QR），打开收银台即可展示
   const defaultMethodQr = await generateMethodQr(
-    "paypal",
+    DEFAULT_CHECKOUT_METHOD,
     input.amount,
     paymentId,
     receiveSettings,
@@ -87,7 +88,7 @@ export async function createPayment(
     qrDataUrl: defaultMethodQr.qrDataUrl,
     paypalClientId: getPayPalClientId(),
     demoMode: provider === "demo",
-    methodQrs: { paypal: defaultMethodQr },
+    methodQrs: { [DEFAULT_CHECKOUT_METHOD]: defaultMethodQr },
     receiveNote: receiveSettings.receiveNote,
     requireAdminConfirm,
   };
