@@ -95,7 +95,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[rgba(3,3,10,0.82)] text-[#F5F5F7] backdrop-blur-[16px]">
       <div className="mx-auto flex h-[54px] max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" className="shrink-0 text-[14px] font-bold tracking-tight">
+        <Link href="/" prefetch={false} className="shrink-0 text-[14px] font-bold tracking-tight">
           🎁 Mystery Box
         </Link>
 
@@ -104,6 +104,7 @@ export default function Header() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={`text-sm transition ${
                 item.highlight
                   ? "font-bold text-[#FFB800] hover:text-[#FF7A00]"
@@ -121,6 +122,7 @@ export default function Header() {
             <>
               <Link
                 href="/account"
+                prefetch={false}
                 className="max-w-[120px] truncate rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-medium text-white/85 transition hover:bg-white/15 sm:max-w-[160px]"
                 title={user.email}
               >
@@ -129,6 +131,7 @@ export default function Header() {
               </Link>
               <Link
                 href="/account"
+                prefetch={false}
                 className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-[13px] font-medium transition hover:bg-white/15 sm:px-3"
                 title={m.nav.wallet}
               >
@@ -142,6 +145,7 @@ export default function Header() {
           ) : (
             <Link
               href="/login"
+              prefetch={false}
               className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-medium transition hover:bg-white/15"
             >
               {loading ? "…" : m.nav.login}
@@ -150,6 +154,7 @@ export default function Header() {
 
           <Link
             href="/cart"
+            prefetch={false}
             className="relative flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 text-sm font-medium transition hover:bg-white/15 sm:px-3"
           >
             <svg

@@ -500,7 +500,7 @@ export default function BlindBoxLanding({
               <p className="text-[11px] uppercase tracking-widest text-white/35">{l.betaLabel}</p>
               <h2 className="mt-1 text-lg font-semibold text-white/60">{l.alsoShop}</h2>
             </div>
-            <Link href="/products" className="text-sm text-[#FFB800]/80 hover:text-[#FFB800]">
+            <Link href="/products" prefetch={false} className="text-sm text-[#FFB800]/80 hover:text-[#FFB800]">
               {l.viewAll}
             </Link>
           </div>

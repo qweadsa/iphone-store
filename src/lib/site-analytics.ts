@@ -57,10 +57,11 @@ export function normalizeTrackPath(pathname: string): string {
 
 export function shouldTrackRequest(method: string, headers: { get(name: string): string | null }): boolean {
   if (method !== "GET") return false;
-  // Next.js Link prefetch — user did not actually open the page
+  // Background prefetch (not a real click / navigation)
   if (headers.get("next-router-prefetch") === "1") return false;
   if (headers.get("purpose")?.toLowerCase() === "prefetch") return false;
   if (headers.get("sec-purpose")?.toLowerCase() === "prefetch") return false;
+  // Real page open: full reload (document) or user clicked a Link (RSC navigation)
   return true;
 }
 
