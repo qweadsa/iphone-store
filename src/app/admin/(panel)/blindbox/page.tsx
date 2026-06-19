@@ -37,6 +37,9 @@ type Config = {
   seoDescription: string | null;
   dailyLimit: number;
   winnersDemoMode?: boolean;
+  statsDemoMode?: boolean;
+  displayPlayersToday?: number;
+  displayWinnersToday?: number;
 };
 
 const TIERS = [
@@ -114,6 +117,10 @@ export default function BlindBoxAdminPage() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
   const [frontendPoolCount, setFrontendPoolCount] = useState<number | null>(null);
+  const [realStatsToday, setRealStatsToday] = useState<{
+    playersToday: number;
+    winnersToday: number;
+  } | null>(null);
   const saveTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const prizesRef = useRef<Prize[]>([]);
 
@@ -132,9 +139,18 @@ export default function BlindBoxAdminPage() {
       setConfig({
         ...d.config,
         heroShowcase: parseHeroShowcaseJson(d.config?.heroShowcaseJson),
+        statsDemoMode: d.config?.statsDemoMode !== false,
+        displayPlayersToday: d.config?.displayPlayersToday ?? 128,
+        displayWinnersToday: d.config?.displayWinnersToday ?? 42,
       });
       setPrizes((d.prizes ?? []).map((p: Record<string, unknown>) => normalizePrize(p)));
       setFrontendPoolCount(poolCount);
+      if (d.realStatsToday) {
+        setRealStatsToday({
+          playersToday: d.realStatsToday.playersToday ?? 0,
+          winnersToday: d.realStatsToday.winnersToday ?? 0,
+        });
+      }
     });
   }, []);
 
@@ -170,6 +186,7 @@ export default function BlindBoxAdminPage() {
     });
     const data = (await res.json().catch(() => ({}))) as { error?: string };
     setMsg(res.ok ? "✅ 盲盒设置已保存" : `❌ ${data.error || "保存失败"}`);
+    if (res.ok) await reload();
   }
 
   async function savePrize(prize: Prize, opts?: { quiet?: boolean }) {
@@ -416,6 +433,62 @@ export default function BlindBoxAdminPage() {
               <span className="text-white/70">前台中奖动态演示模式</span>
             </label>
           </div>
+
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+            <h3 className="text-sm font-semibold text-amber-200">首页数据卡片（今日玩家 / 今日中奖）</h3>
+            <p className="mt-1 text-xs text-white/50">
+              前台显示 = 下方「基础数值」+ 今日真实数据（有人付款成功 +1 玩家，有人抽中非安慰奖 +1 中奖）。
+              取消勾选「叠加基础数值」则只显示真实数据。
+            </p>
+            {realStatsToday && (
+              <p className="mt-2 text-xs text-white/45">
+                今日真实：{realStatsToday.playersToday} 笔盲盒付款 · {realStatsToday.winnersToday} 次中奖
+                {config.statsDemoMode !== false && (
+                  <>
+                    {" "}
+                    → 前台约{" "}
+                    {(config.displayPlayersToday ?? 0) + realStatsToday.playersToday} 玩家 /{" "}
+                    {(config.displayWinnersToday ?? 0) + realStatsToday.winnersToday} 中奖
+                  </>
+                )}
+              </p>
+            )}
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="text-white/70">基础 · 今日玩家</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={config.displayPlayersToday ?? 0}
+                  onChange={(e) =>
+                    setConfig({ ...config, displayPlayersToday: Number(e.target.value) })
+                  }
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-white/70">基础 · 今日中奖</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={config.displayWinnersToday ?? 0}
+                  onChange={(e) =>
+                    setConfig({ ...config, displayWinnersToday: Number(e.target.value) })
+                  }
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                />
+              </label>
+              <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={config.statsDemoMode !== false}
+                  onChange={(e) => setConfig({ ...config, statsDemoMode: e.target.checked })}
+                />
+                <span className="text-white/70">叠加基础数值（推荐开启，真实付款会自动往上加）</span>
+              </label>
+            </div>
+          </div>
+
           <label className="block text-sm">
             <span className="text-white/70">首页标题</span>
             <input

@@ -3,16 +3,18 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { adminApiErrorMessage } from "@/lib/admin-api-error";
+import { getRealBlindBoxStatsToday } from "@/lib/blindbox-stats";
 import { DEFAULT_GRAND_PRIZE_VALUE, DEFAULT_BLIND_BOX_PRICE } from "@/lib/market";
 
 export async function GET() {
   try {
     await requireAdmin();
-    const [config, prizes] = await Promise.all([
+    const [config, prizes, realStatsToday] = await Promise.all([
       prisma.blindBoxConfig.findFirst({ where: { id: 1 } }),
       prisma.blindBoxPrize.findMany({ orderBy: { sortOrder: "asc" } }),
+      getRealBlindBoxStatsToday(),
     ]);
-    return NextResponse.json({ config, prizes });
+    return NextResponse.json({ config, prizes, realStatsToday });
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHORIZED") {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
@@ -40,6 +42,9 @@ export async function PUT(req: Request) {
         seoDescription: body.seoDescription,
         dailyLimit: body.dailyLimit ?? 0,
         winnersDemoMode: body.winnersDemoMode ?? true,
+        statsDemoMode: body.statsDemoMode ?? true,
+        displayPlayersToday: body.displayPlayersToday ?? 0,
+        displayWinnersToday: body.displayWinnersToday ?? 0,
       },
       create: {
         id: 1,
@@ -55,6 +60,9 @@ export async function PUT(req: Request) {
         seoDescription: body.seoDescription,
         dailyLimit: body.dailyLimit ?? 0,
         winnersDemoMode: body.winnersDemoMode ?? true,
+        statsDemoMode: body.statsDemoMode ?? true,
+        displayPlayersToday: body.displayPlayersToday ?? 128,
+        displayWinnersToday: body.displayWinnersToday ?? 42,
       },
     });
     revalidatePath("/");

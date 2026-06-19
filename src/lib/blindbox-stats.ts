@@ -20,7 +20,13 @@ function startOfToday(): Date {
 async function getRealBlindBoxStats() {
   const since = startOfToday();
   const [playersToday, winnersToday, grandClaimed] = await Promise.all([
-    prisma.blindBoxDraw.count({ where: { createdAt: { gte: since } } }),
+    prisma.payment.count({
+      where: {
+        purpose: "blindbox",
+        status: "completed",
+        updatedAt: { gte: since },
+      },
+    }),
     prisma.blindBoxDraw.count({
       where: { createdAt: { gte: since }, prizeType: { not: "retry" } },
     }),
@@ -35,6 +41,17 @@ async function getRealBlindBoxStats() {
   };
 }
 
+export async function getRealBlindBoxStatsToday() {
+  if (!isDatabaseConfigured) {
+    return { playersToday: 0, winnersToday: 0, grandPrizeStatus: "available" as GrandPrizeStatus };
+  }
+  try {
+    return await getRealBlindBoxStats();
+  } catch {
+    return { playersToday: 0, winnersToday: 0, grandPrizeStatus: "available" as GrandPrizeStatus };
+  }
+}
+
 export async function getBlindBoxStats() {
   if (!isDatabaseConfigured) {
     return { playersToday: 0, winnersToday: 0, grandPrizeStatus: "available" as GrandPrizeStatus };
@@ -43,15 +60,15 @@ export async function getBlindBoxStats() {
     const config = await prisma.blindBoxConfig.findFirst({ where: { id: 1 } });
     const real = await getRealBlindBoxStats();
 
-    if (config?.statsDemoMode !== false) {
-      return {
-        playersToday: config?.displayPlayersToday ?? 128,
-        winnersToday: config?.displayWinnersToday ?? 42,
-        grandPrizeStatus: real.grandPrizeStatus,
-      };
+    if (config?.statsDemoMode === false) {
+      return real;
     }
 
-    return real;
+    return {
+      playersToday: (config?.displayPlayersToday ?? 0) + real.playersToday,
+      winnersToday: (config?.displayWinnersToday ?? 0) + real.winnersToday,
+      grandPrizeStatus: real.grandPrizeStatus,
+    };
   } catch {
     return { playersToday: 0, winnersToday: 0, grandPrizeStatus: "available" as GrandPrizeStatus };
   }
