@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getResponsiveRasterUrl } from "@/lib/raster-image-url";
 
 type Props = {
   imageUrl?: string | null;
@@ -6,6 +10,7 @@ type Props = {
   alt: string;
   size?: "sm" | "md" | "lg" | "reel";
   className?: string;
+  priority?: boolean;
 };
 
 const SIZE = {
@@ -21,11 +26,24 @@ export default function PrizeVisual({
   alt,
   size = "md",
   className = "",
+  priority = false,
 }: Props) {
   const s = SIZE[size];
+  const rawUrl = imageUrl?.trim() ?? "";
+  const [src, setSrc] = useState(() =>
+    rawUrl ? getResponsiveRasterUrl(rawUrl, s.img) : "",
+  );
 
-  if (imageUrl) {
-    const isSvg = imageUrl.endsWith(".svg");
+  useEffect(() => {
+    if (!rawUrl) {
+      setSrc("");
+      return;
+    }
+    setSrc(getResponsiveRasterUrl(rawUrl, s.img));
+  }, [rawUrl, s.img]);
+
+  if (rawUrl && src) {
+    const isSvg = rawUrl.endsWith(".svg");
     return (
       <div
         className={`relative shrink-0 overflow-hidden rounded-xl ${s.box} ${className} ${
@@ -33,12 +51,18 @@ export default function PrizeVisual({
         }`}
       >
         <Image
-          src={imageUrl}
+          src={src}
           alt={alt}
           width={s.img}
           height={s.img}
+          sizes={`${s.img}px`}
+          priority={priority}
+          loading={priority ? undefined : "lazy"}
           className={`h-full w-full object-contain p-1 ${isSvg ? "" : "drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)]"}`}
           unoptimized={isSvg}
+          onError={() => {
+            if (src !== rawUrl) setSrc(rawUrl);
+          }}
         />
       </div>
     );

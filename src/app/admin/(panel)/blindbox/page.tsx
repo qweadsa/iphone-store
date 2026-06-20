@@ -55,7 +55,7 @@ const FULFILLMENTS = [
   { value: "case", label: "配件/实物" },
   { value: "coupon", label: "优惠券" },
   { value: "retry", label: "安慰奖/未中" },
-  { value: "none", label: "仅展示 (不参与发奖逻辑)" },
+  { value: "none", label: "仅展示（仍显示奖池，不参与发奖）" },
 ];
 
 function emptyPrize(sortOrder: number): Omit<Prize, "id"> {
@@ -123,6 +123,8 @@ export default function BlindBoxAdminPage() {
   } | null>(null);
   const saveTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const prizesRef = useRef<Prize[]>([]);
+  const prizeCardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set());
 
   const reload = useCallback(() => {
     return Promise.all([
@@ -227,7 +229,17 @@ export default function BlindBoxAdminPage() {
         const latest = prizesRef.current.find((p) => p.id === prizeId);
         if (!latest) return;
         void savePrize(latest, { quiet: true }).then((ok) => {
-          if (ok) setMsg("✅ 已自动保存并同步到首页");
+          if (ok) {
+            setMsg("✅ 已自动保存并同步到首页");
+            void fetch("/api/blindbox/prizes", { cache: "no-store" })
+              .then((r) => r.json())
+              .then((d) => {
+                if (typeof d.poolCount === "number") setFrontendPoolCount(d.poolCount);
+              })
+              .catch(() => undefined);
+          } else {
+            setMsg("❌ 自动保存失败，请点「保存此礼品」或检查礼品名称");
+          }
         });
       }, 900),
     );
@@ -283,12 +295,31 @@ export default function BlindBoxAdminPage() {
       }),
     });
     if (res.ok) {
-      setMsg("✅ 已添加新礼品，修改后会自动保存到首页");
+      const created = (await res.json()) as { id?: number };
+      setMsg("✅ 已添加新礼品，请填写名称后保存");
       await reload();
+      if (created.id != null) {
+        setExpandedIds(new Set([created.id]));
+        requestAnimationFrame(() => {
+          prizeCardRefs.current.get(created.id!)?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      }
     } else {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       setMsg(`❌ 添加失败：${data.error || res.status}`);
     }
+  }
+
+  function togglePrizeExpanded(id: number) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
   async function deletePrize(id: number, name: string) {
@@ -343,7 +374,7 @@ export default function BlindBoxAdminPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold">盲盒管理</h1>
+      <h1 className="text-xl font-bold md:text-2xl">盲盒管理</h1>
       <p className="mt-1 text-white/50">
         管理所有高端礼品：iPhone、电脑、显卡、耳机、相机等。修改后会自动保存并同步到首页奖池和开箱滚轴。
       </p>
@@ -375,7 +406,7 @@ export default function BlindBoxAdminPage() {
       {msg && <p className="mt-4 text-sm text-amber-400">{msg}</p>}
 
       {config && (
-        <section className="mt-8 space-y-4 rounded-xl border border-white/10 bg-white/5 p-6">
+        <section className="mt-8 space-y-4 rounded-xl border border-white/10 bg-white/5 p-4 md:p-6">
           <h2 className="font-semibold">盲盒设置</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
@@ -519,15 +550,15 @@ export default function BlindBoxAdminPage() {
         </section>
       )}
 
-      <section className="mt-8 rounded-xl border border-white/10 bg-white/5 p-6">
+      <section className="mt-8 rounded-xl border border-white/10 bg-white/5 p-4 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="font-semibold">礼品库 ({prizes.length})</h2>
             <p className="mt-1 text-xs text-white/40">
-              修改后会自动保存并同步到首页（约 1 秒）。前台显示需勾选：启用 + 显示在奖池；发奖类型勿选「安慰奖/未中」。
+              点击礼品卡片展开编辑。需勾选「启用」且非安慰奖才会显示在首页奖池。
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="hidden flex-wrap gap-2 sm:flex">
             <button
               onClick={saveAllPrizes}
               disabled={prizes.length === 0}
@@ -542,16 +573,84 @@ export default function BlindBoxAdminPage() {
               + 添加礼品
             </button>
           </div>
+          <div className="flex w-full flex-wrap gap-2 sm:hidden">
+            <button
+              onClick={saveAllPrizes}
+              disabled={prizes.length === 0}
+              className="flex-1 rounded-lg border border-amber-500/50 py-2 text-sm font-medium text-amber-300 disabled:opacity-40"
+            >
+              保存全部
+            </button>
+            <button
+              onClick={addPrize}
+              className="flex-1 rounded-lg bg-amber-500 py-2 text-sm font-bold text-black"
+            >
+              + 添加礼品
+            </button>
+          </div>
         </div>
 
-        <div className="mt-4 space-y-5">
+        <div className="mt-4 space-y-3">
           {prizes.map((prize, idx) => {
             const realOdds = getPrizeRealOdds(prize, drawWeight);
             const displayLabel = prize.displayOdds?.trim() || realOdds;
+            const expanded = expandedIds.has(prize.id);
+            const poolVisible = willShowOnFrontend(prize);
             return (
-              <div key={prize.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <div className="flex flex-wrap items-center gap-2 border-b border-white/5 pb-3">
-                  <span className="text-xs text-white/40">#{idx + 1}</span>
+              <div
+                key={prize.id}
+                ref={(el) => {
+                  if (el) prizeCardRefs.current.set(prize.id, el);
+                  else prizeCardRefs.current.delete(prize.id);
+                }}
+                className={`rounded-xl border bg-black/20 transition ${
+                  expanded ? "border-amber-500/30" : "border-white/10"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => togglePrizeExpanded(prize.id)}
+                  className="flex w-full items-center gap-3 p-3 text-left md:p-4"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/95 text-xl">
+                    {prize.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={prize.imageUrl}
+                        alt=""
+                        className="h-full w-full object-contain p-0.5"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span>{prize.emoji}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-white/40">#{idx + 1}</span>
+                      <p className="truncate font-medium text-white">
+                        {prize.name.trim() || "未命名礼品"}
+                      </p>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          poolVisible
+                            ? "bg-emerald-500/15 text-emerald-300"
+                            : "bg-red-500/15 text-red-300"
+                        }`}
+                      >
+                        {poolVisible ? "奖池可见" : "奖池隐藏"}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-white/45">
+                      前台 {displayLabel} · 真实 {realOdds}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-white/40">{expanded ? "▲" : "▼"}</span>
+                </button>
+
+                {expanded && (
+                  <div className="border-t border-white/5 px-3 pb-4 md:px-4">
+                <div className="flex flex-wrap items-center gap-2 border-b border-white/5 py-3">
                   <button
                     type="button"
                     onClick={() => movePrize(idx, -1)}
@@ -568,21 +667,10 @@ export default function BlindBoxAdminPage() {
                   >
                     ↓
                   </button>
-                  <span className="ml-auto text-right text-xs font-medium text-amber-400">
-                    前台 {displayLabel}
-                    <span className="mt-0.5 block text-[10px] text-white/40">真实抽奖 {realOdds}</span>
-                    <span
-                      className={`mt-0.5 block text-[10px] ${
-                        willShowOnFrontend(prize) ? "text-emerald-400/90" : "text-red-300/90"
-                      }`}
-                    >
-                      {willShowOnFrontend(prize) ? "✓ 会显示在首页奖池" : "✗ 不会显示在首页奖池"}
-                    </span>
-                  </span>
                   <button
                     type="button"
                     onClick={() => deletePrize(prize.id, prize.name)}
-                    className="text-xs text-red-400 hover:underline"
+                    className="ml-auto text-xs text-red-400 hover:underline"
                   >
                     删除
                   </button>
@@ -650,9 +738,11 @@ export default function BlindBoxAdminPage() {
                         「安慰奖/未中」不会出现在首页奖池和抽奖滚轴，仅参与后台抽奖权重。
                       </p>
                     )}
-                    {prize.fulfillmentType !== "retry" && prize.fulfillmentType !== "none" && (
+                    {prize.fulfillmentType !== "retry" && (
                       <p className="mt-2 text-xs text-white/45">
-                        配件/实物、优惠券等会显示在首页奖池（已自动勾选「显示在奖池」）。
+                        {prize.fulfillmentType === "none"
+                          ? "「仅展示」仍会出现在首页奖池和滚轴，但不会真正发给用户。"
+                          : "配件/实物、优惠券等会显示在首页奖池（已自动勾选「显示在奖池」）。"}
                       </p>
                     )}
                   </label>
@@ -781,10 +871,12 @@ export default function BlindBoxAdminPage() {
 
                 <button
                   onClick={() => savePrize(prizes[idx])}
-                  className="mt-4 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20"
+                  className="mt-4 w-full rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-bold text-black sm:w-auto"
                 >
                   保存此礼品
                 </button>
+                  </div>
+                )}
               </div>
             );
           })}

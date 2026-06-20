@@ -19,6 +19,7 @@ import { getPrizeImageUrl } from "@/lib/prize-images";
 import PrizeVisual from "@/components/PrizeVisual";
 import { getPrizeDisplayOdds } from "@/lib/probability";
 import { resolveHeroShowcaseFrames } from "@/lib/hero-showcase";
+import { useHashScroll } from "@/lib/use-hash-scroll";
 import type { HeroShowcaseEntry } from "@/lib/hero-showcase";
 import type { BlindBoxPrize } from "@/types/blindbox";
 import type { Product } from "@/types/product";
@@ -125,6 +126,7 @@ export default function BlindBoxLanding({
   renderedAt,
 }: Props) {
   const { messages: m, locale } = useI18n();
+  useHashScroll();
   const b = m.blindBox;
   const l = m.landing;
   const mob = l.mobile;
@@ -342,7 +344,7 @@ export default function BlindBoxLanding({
       {/* ── 抽奖区（CS 开箱，优先展示） ── */}
       <section
         id="draw"
-        className="border-t border-white/[0.08] bg-gradient-to-b from-[#050507] to-[#03030A] py-14 md:py-20"
+        className="scroll-mt-[118px] border-t border-white/[0.08] bg-gradient-to-b from-[#050507] to-[#03030A] py-14 md:scroll-mt-20 md:py-20"
       >
         <div className="mx-auto max-w-3xl px-4 text-center md:px-6">
           <h2 className="text-[26px] font-black md:text-4xl">{b.pageTitle}</h2>
@@ -352,7 +354,7 @@ export default function BlindBoxLanding({
       </section>
 
       {/* ── 奖池 ── */}
-      <section id="prizes" className="border-t border-white/[0.08] px-4 py-14 md:px-6 md:py-20">
+      <section id="prizes" className="scroll-mt-[118px] border-t border-white/[0.08] px-4 py-14 md:scroll-mt-20 md:px-6 md:py-20">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-[26px] font-black md:text-3xl">{l.poolTitle}</h2>
           <p className="mt-2 text-[14px] text-white/55">{l.poolSubtitle}</p>
