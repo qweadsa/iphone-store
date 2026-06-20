@@ -83,11 +83,16 @@ export default function Header() {
       .finally(() => setContactLoaded(true));
   }, []);
 
-  const nav = [
-    { href: "/#draw", label: m.nav.blindBox, highlight: true },
-    { href: "/products", label: m.nav.shop },
-    { href: "/orders", label: m.nav.orders },
-    { href: "/prize/claim", label: m.nav.claimPrize },
+  const nav: {
+    href: string;
+    label: string;
+    icon: string;
+    highlight?: boolean;
+  }[] = [
+    { href: "/#draw", label: m.nav.blindBox, icon: "🎁", highlight: true },
+    { href: "/products", label: m.nav.shop, icon: "📱" },
+    { href: "/orders", label: m.nav.orders, icon: "📋" },
+    { href: "/prize/claim", label: m.nav.claimPrize, icon: "📦" },
   ];
 
   const userLabel = user?.name?.trim() || user?.email?.split("@")[0] || m.nav.login;
@@ -210,6 +215,33 @@ export default function Header() {
             ))}
         </div>
       </div>
+
+      <nav
+        className="border-t border-white/[0.06] bg-[rgba(3,3,10,0.88)] md:hidden"
+        aria-label="Mobile navigation"
+      >
+        <div className="mx-auto grid max-w-6xl grid-cols-4 gap-1.5 px-2 py-2 sm:px-3">
+          {nav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={false}
+              className={`flex min-w-0 flex-col items-center justify-center rounded-xl border px-1 py-2 text-center transition active:scale-[0.98] ${
+                item.highlight
+                  ? "border-[#FFB800]/35 bg-[#FFB800]/10 text-[#FFB800]"
+                  : "border-white/[0.08] bg-white/[0.05] text-white/75 hover:border-white/15 hover:bg-white/[0.08]"
+              }`}
+            >
+              <span className="text-[15px] leading-none" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="mt-1 line-clamp-2 text-[10px] font-semibold leading-tight sm:text-[11px]">
+                {item.label}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </nav>
     </header>
   );
 }
