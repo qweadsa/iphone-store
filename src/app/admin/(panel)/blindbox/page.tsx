@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import HeroShowcaseEditor from "@/components/admin/HeroShowcaseEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { getPrizeRealOdds } from "@/lib/probability";
+import { displayPrizeName } from "@/lib/prize-display";
 import { formatAdminPrice } from "@/lib/market";
 import { parseHeroShowcaseJson, serializeHeroShowcase, type HeroShowcaseEntry } from "@/lib/hero-showcase";
 
@@ -109,6 +110,17 @@ function normalizePrize(raw: Record<string, unknown>): Prize {
     prize.showInPool = true;
   }
   return prize;
+}
+
+function poolPositionById(prizes: Prize[]): Map<number, number> {
+  const map = new Map<number, number>();
+  let pos = 0;
+  for (const prize of [...prizes].sort((a, b) => a.sortOrder - b.sortOrder)) {
+    if (!willShowOnFrontend(prize)) continue;
+    pos += 1;
+    map.set(prize.id, pos);
+  }
+  return map;
 }
 
 export default function BlindBoxAdminPage() {
@@ -371,6 +383,7 @@ export default function BlindBoxAdminPage() {
     .filter((p) => p.active && p.drawable && p.weight > 0)
     .reduce((s, p) => s + p.weight, 0);
   const localPoolCount = prizes.filter(willShowOnFrontend).length;
+  const poolPositions = poolPositionById(prizes);
 
   return (
     <div className="max-w-4xl">
@@ -596,6 +609,11 @@ export default function BlindBoxAdminPage() {
             const displayLabel = prize.displayOdds?.trim() || realOdds;
             const expanded = expandedIds.has(prize.id);
             const poolVisible = willShowOnFrontend(prize);
+            const poolPos = poolPositions.get(prize.id);
+            const frontendName = displayPrizeName(
+              { key: prize.prizeType, name: prize.name, fulfillmentType: prize.fulfillmentType },
+              "zh",
+            );
             return (
               <div
                 key={prize.id}
@@ -627,7 +645,9 @@ export default function BlindBoxAdminPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-white/40">#{idx + 1}</span>
+                      <span className="text-xs text-white/40">
+                        #{idx + 1} · ID {prize.id}
+                      </span>
                       <p className="truncate font-medium text-white">
                         {prize.name.trim() || "未命名礼品"}
                       </p>
@@ -638,11 +658,11 @@ export default function BlindBoxAdminPage() {
                             : "bg-red-500/15 text-red-300"
                         }`}
                       >
-                        {poolVisible ? "奖池可见" : "奖池隐藏"}
+                        {poolVisible ? `奖池第 ${poolPos} 格` : "奖池隐藏"}
                       </span>
                     </div>
                     <p className="mt-0.5 text-xs text-white/45">
-                      前台 {displayLabel} · 真实 {realOdds}
+                      前台显示「{frontendName}」· {displayLabel} · 标识 {prize.prizeType}
                     </p>
                   </div>
                   <span className="shrink-0 text-white/40">{expanded ? "▲" : "▼"}</span>
