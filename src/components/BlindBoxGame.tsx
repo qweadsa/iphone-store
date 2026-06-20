@@ -261,7 +261,7 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
           <>
             <Link
               href={claimAddressHref}
-              className="cta-breathe w-full max-w-md rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-10 py-4 text-center text-sm font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)] transition hover:scale-105 sm:w-auto"
+              className="cta-primary cta-breathe w-full max-w-md px-10 py-4 text-center text-sm transition hover:scale-105 sm:w-auto"
             >
               {b.fillAddressBtn}
             </Link>
@@ -275,14 +275,14 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
         ) : isCreditWin && !credited && !showOrderReceipt ? (
           <Link
             href={loginHref}
-            className="cta-breathe w-full max-w-md rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-10 py-4 text-center text-sm font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)] transition hover:scale-105 sm:w-auto"
+            className="cta-primary cta-breathe w-full max-w-md px-10 py-4 text-center text-sm transition hover:scale-105 sm:w-auto"
           >
             {a.loginToClaimCredit}
           </Link>
         ) : isCreditWin && credited ? (
           <Link
             href="/account"
-            className="cta-breathe w-full max-w-md rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-10 py-4 text-center text-sm font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)] transition hover:scale-105 sm:w-auto"
+            className="cta-primary cta-breathe w-full max-w-md px-10 py-4 text-center text-sm transition hover:scale-105 sm:w-auto"
           >
             {a.goToWallet}
           </Link>
@@ -293,10 +293,10 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
           <button
             onClick={handleDrawClick}
             disabled={phase === "spinning" || fetching || showOrderReceipt}
-            className={`w-full max-w-md rounded-full px-10 py-4 text-sm font-bold transition hover:scale-105 disabled:opacity-50 sm:w-auto ${
+            className={`w-full max-w-md px-10 py-4 text-sm transition hover:scale-105 disabled:opacity-50 sm:w-auto ${
               isCreditWin && credited
-                ? "border border-white/20 bg-white/5 text-white hover:bg-white/10"
-                : "cta-breathe bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
+                ? "rounded-full border border-white/20 bg-white/5 font-bold text-white hover:bg-white/10"
+                : "cta-primary cta-breathe"
             }`}
           >
             {phase === "done"

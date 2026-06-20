@@ -40,7 +40,7 @@ export default function MobileFixedCta({
         </div>
         <a
           href="#draw"
-          className="cta-breathe flex h-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-5 text-[13px] font-bold text-[#03030A] shadow-[0_12px_32px_rgba(255,122,0,0.35)]"
+          className="cta-primary cta-breathe flex h-12 shrink-0 items-center justify-center px-5 text-[13px]"
         >
           {buttonLabel.includes("RM") || buttonLabel.includes("$") ? drawLabel : buttonLabel}
         </a>

@@ -290,7 +290,8 @@ export default function BlindBoxLanding({
             <div className="mt-[18px] flex flex-col gap-3 sm:max-w-md">
               <a
                 href="#draw"
-                className="cta-breathe flex h-[58px] w-full items-center justify-center rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] text-[16px] font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
+                className="cta-primary cta-breathe flex h-[58px] w-full items-center justify-center text-[16px]"
+                style={{ backgroundColor: "#ffb800", color: "#03030a" }}
               >
                 {drawNowLabel}
               </a>
@@ -498,7 +499,7 @@ export default function BlindBoxLanding({
           </p>
           <a
             href="#draw"
-            className="cta-breathe mt-8 inline-block rounded-full bg-gradient-to-br from-[#FFB800] via-[#FF7A00] to-[#FF2D2D] px-12 py-4 text-base font-bold text-[#03030A] shadow-[0_16px_40px_rgba(255,122,0,0.35)]"
+            className="cta-primary cta-breathe mt-8 inline-block px-12 py-4 text-base"
           >
             {drawNowLabel}
           </a>
