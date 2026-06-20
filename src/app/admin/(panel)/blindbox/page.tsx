@@ -80,20 +80,11 @@ function emptyPrize(sortOrder: number): Omit<Prize, "id"> {
 }
 
 function willShowOnFrontend(prize: Prize): boolean {
-  return willShowPrizeInPool({
-    active: prize.active,
-    showInPool: prize.showInPool,
-    fulfillmentType: prize.fulfillmentType,
-    prizeType: prize.prizeType,
-  });
+  return willShowPrizeInPool({ active: prize.active, showInPool: prize.showInPool });
 }
 
 function normalizePrizeForSave(prize: Prize): Prize {
-  return {
-    ...prize,
-    showInPool: prize.fulfillmentType === "retry" ? false : true,
-    active: prize.active || prize.fulfillmentType !== "retry",
-  };
+  return prize;
 }
 
 function normalizePrize(raw: Record<string, unknown>): Prize {
@@ -113,9 +104,6 @@ function normalizePrize(raw: Record<string, unknown>): Prize {
     active: raw.active !== false && raw.active !== 0,
     sortOrder: Number(raw.sortOrder ?? raw.sort_order) || 0,
   };
-  if (prize.fulfillmentType !== "retry") {
-    prize.showInPool = true;
-  }
   return prize;
 }
 
@@ -575,7 +563,7 @@ export default function BlindBoxAdminPage() {
           <div className="min-w-0 flex-1">
             <h2 className="font-semibold">礼品库 ({prizes.length})</h2>
             <p className="mt-1 text-xs text-white/40">
-              点击礼品卡片展开编辑。需勾选「启用」且非安慰奖才会显示在首页奖池。
+              点击礼品卡片展开编辑。「显示在奖池 + 开箱滚轴」控制首页奖池和立即开盲盒滚轴；安慰奖也可手动开关。
             </p>
           </div>
           <div className="hidden flex-wrap gap-2 sm:flex">
@@ -756,16 +744,9 @@ export default function BlindBoxAdminPage() {
                     <select
                       value={prize.fulfillmentType}
                       onChange={(e) => {
-                        const fulfillmentType = e.target.value as FulfillmentType;
-                        if (fulfillmentType === "retry") {
-                          updatePrize(idx, { fulfillmentType, showInPool: false });
-                        } else {
-                          updatePrize(idx, {
-                            fulfillmentType,
-                            showInPool: true,
-                            active: true,
-                          });
-                        }
+                        updatePrize(idx, {
+                          fulfillmentType: e.target.value as FulfillmentType,
+                        });
                       }}
                       className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2"
                     >
@@ -776,15 +757,13 @@ export default function BlindBoxAdminPage() {
                       ))}
                     </select>
                     {prize.fulfillmentType === "retry" && (
-                      <p className="mt-2 text-xs font-medium text-red-300">
-                        「安慰奖/未中」不会出现在首页奖池和抽奖滚轴，仅参与后台抽奖权重。
+                      <p className="mt-2 text-xs text-white/45">
+                        安慰奖默认不展示；勾选下方「显示在奖池 + 开箱滚轴」后，会出现在首页奖池和立即开盲盒滚轴。
                       </p>
                     )}
-                    {prize.fulfillmentType !== "retry" && (
+                    {prize.fulfillmentType === "none" && (
                       <p className="mt-2 text-xs text-white/45">
-                        {prize.fulfillmentType === "none"
-                          ? "「仅展示」仍会出现在首页奖池和滚轴，但不会真正发给用户。"
-                          : "配件/实物、优惠券等会显示在首页奖池（已自动勾选「显示在奖池」）。"}
+                        「仅展示」会按勾选状态出现在奖池和滚轴，但不会真正发给用户。
                       </p>
                     )}
                   </label>
@@ -857,28 +836,13 @@ export default function BlindBoxAdminPage() {
                     />
                     <span className="text-white/70">参与抽奖</span>
                   </label>
-                  <label
-                    className={`flex items-center gap-2 rounded-lg px-2 py-1 ${
-                      prize.fulfillmentType !== "retry" || prize.showInPool
-                        ? ""
-                        : "border border-red-500/40 bg-red-500/10"
-                    }`}
-                  >
+                  <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={prize.fulfillmentType !== "retry" ? true : prize.showInPool}
-                      disabled={prize.fulfillmentType !== "retry"}
+                      checked={prize.showInPool}
                       onChange={(e) => updatePrize(idx, { showInPool: e.target.checked })}
                     />
-                    <span
-                      className={
-                        prize.fulfillmentType !== "retry" || prize.showInPool
-                          ? "text-white/70"
-                          : "font-semibold text-red-300"
-                      }
-                    >
-                      显示在奖池（前台必勾）
-                    </span>
+                    <span className="text-white/70">显示在奖池 + 开箱滚轴</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input
@@ -889,14 +853,20 @@ export default function BlindBoxAdminPage() {
                     <span className="text-white/70">启用</span>
                   </label>
                 </div>
-                {prize.fulfillmentType === "retry" && !prize.showInPool && (
-                  <p className="mt-2 text-xs font-medium text-red-300">
-                    ⚠ 安慰奖默认不显示在首页奖池（仅参与抽奖权重）。
+                {prize.fulfillmentType === "retry" && (
+                  <p
+                    className={`mt-2 text-xs ${
+                      prize.showInPool ? "text-emerald-400/80" : "text-white/45"
+                    }`}
+                  >
+                    {prize.showInPool
+                      ? "✓ 安慰奖将显示在首页奖池和立即开盲盒滚轴。"
+                      : "安慰奖仅参与抽奖权重，不在奖池和滚轴展示。"}
                   </p>
                 )}
-                {prize.fulfillmentType !== "retry" && (
+                {prize.fulfillmentType !== "retry" && prize.showInPool && (
                   <p className="mt-2 text-xs text-emerald-400/80">
-                    非安慰奖礼品保存后会自动显示在首页奖池。
+                    ✓ 将显示在首页奖池和开箱滚轴。
                   </p>
                 )}
 

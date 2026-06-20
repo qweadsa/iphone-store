@@ -48,14 +48,12 @@ export function resolveFulfillmentType(
   return inferFulfillment(prizeType);
 }
 
+/** 首页奖池 + 开箱滚轴是否展示（含安慰奖，由后台 showInPool 控制） */
 export function willShowPrizeInPool(prize: {
   active?: boolean | null;
   showInPool?: boolean | null;
-  fulfillmentType?: string | null;
-  prizeType: string;
 }): boolean {
-  const ft = resolveFulfillmentType(prize.fulfillmentType, prize.prizeType);
-  return prize.active !== false && prize.showInPool !== false && ft !== "retry";
+  return prize.active !== false && prize.showInPool !== false;
 }
 
 function inferFulfillment(prizeType: string): FulfillmentType {
@@ -72,15 +70,15 @@ export function isDrawablePrize(prize: Pick<BlindBoxPrize, "active" | "drawable"
 }
 
 export function isPoolVisiblePrize(
-  prize: Pick<BlindBoxPrize, "active" | "showInPool" | "fulfillmentType">,
+  prize: Pick<BlindBoxPrize, "active" | "showInPool">,
 ): boolean {
-  return prize.active !== false && prize.showInPool !== false && prize.fulfillmentType !== "retry";
+  return willShowPrizeInPool(prize);
 }
 
 export function isReelVisiblePrize(
-  prize: Pick<BlindBoxPrize, "active" | "fulfillmentType">,
+  prize: Pick<BlindBoxPrize, "active" | "showInPool">,
 ): boolean {
-  return prize.active !== false && prize.fulfillmentType !== "retry";
+  return willShowPrizeInPool(prize);
 }
 
 export function isGrandPrize(
