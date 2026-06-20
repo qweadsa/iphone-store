@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isDatabaseConfigured, prisma } from "@/lib/prisma";
 import { generateOrderNumber } from "@/lib/orders";
 import { findGuestRecordsByEmail } from "@/lib/guest-order-lookup";
+import { getEmailValidationMessage, validateEmail } from "@/lib/email-validation";
 
 type OrderItemInput = {
   productId: string;
@@ -26,6 +27,14 @@ export async function POST(req: Request) {
     }
     if (!body.customerName?.trim() || !body.email?.trim() || !body.address?.trim()) {
       return NextResponse.json({ error: "请填写姓名、邮箱和地址" }, { status: 400 });
+    }
+
+    const emailCheck = validateEmail(body.email);
+    if (!emailCheck.valid) {
+      return NextResponse.json(
+        { error: getEmailValidationMessage(emailCheck.reason, "zh") },
+        { status: 400 },
+      );
     }
 
     const paymentId = body.paymentId?.trim();
@@ -59,7 +68,7 @@ export async function POST(req: Request) {
       data: {
         orderNumber,
         customerName: body.customerName.trim(),
-        email: body.email.trim().toLowerCase(),
+        email: emailCheck.normalized,
         phone: body.phone?.trim() || null,
         address: body.address.trim(),
         city: body.city?.trim() || "",
@@ -94,11 +103,15 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
-  const email = searchParams.get("email")?.trim().toLowerCase();
-
-  if (!email) {
-    return NextResponse.json({ error: "请输入邮箱" }, { status: 400 });
+  const emailRaw = searchParams.get("email")?.trim() ?? "";
+  const emailCheck = validateEmail(emailRaw);
+  if (!emailCheck.valid) {
+    return NextResponse.json(
+      { error: getEmailValidationMessage(emailCheck.reason, "zh") },
+      { status: 400 },
+    );
   }
+  const email = emailCheck.normalized;
 
   try {
     const records = await findGuestRecordsByEmail(email);

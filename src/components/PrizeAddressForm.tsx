@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n-context";
 import { useUser } from "@/lib/user-context";
+import SupportedEmailHint from "@/components/SupportedEmailHint";
+import { getEmailValidationMessage, validateEmail } from "@/lib/email-validation";
 
 type Props = {
   paymentId: string;
@@ -17,7 +19,7 @@ export default function PrizeAddressForm({
   defaultEmail = "",
   onSuccess,
 }: Props) {
-  const { messages: m } = useI18n();
+  const { messages: m, locale } = useI18n();
   const c = m.prizeClaim;
   const { user } = useUser();
 
@@ -43,12 +45,26 @@ export default function PrizeAddressForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(getEmailValidationMessage(emailCheck.reason, locale));
+      return;
+    }
     setSubmitting(true);
     setError("");
     const res = await fetch("/api/blindbox/claim", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentId, name, email, phone, address, city, state, zip }),
+      body: JSON.stringify({
+        paymentId,
+        name,
+        email: emailCheck.normalized,
+        phone,
+        address,
+        city,
+        state,
+        zip,
+      }),
     });
     const data = await res.json();
     setSubmitting(false);
@@ -88,6 +104,7 @@ export default function PrizeAddressForm({
         placeholder={c.email}
         className="site-input"
       />
+      <SupportedEmailHint compact />
       <input
         value={phone}
         onChange={(e) => setPhone(e.target.value)}

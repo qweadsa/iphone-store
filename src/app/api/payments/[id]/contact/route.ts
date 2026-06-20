@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getEmailValidationMessage, validateEmail } from "@/lib/email-validation";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params;
   const body = await req.json();
-  const email = body.email?.trim().toLowerCase();
+  const emailCheck = validateEmail(String(body.email ?? ""));
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: "Invalid email" }, { status: 400 });
+  if (!emailCheck.valid) {
+    const locale = String(body.locale ?? "en");
+    return NextResponse.json(
+      { error: getEmailValidationMessage(emailCheck.reason, locale) },
+      { status: 400 },
+    );
   }
 
   const payment = await prisma.payment.findUnique({ where: { paymentId: id } });
@@ -22,8 +27,8 @@ export async function PATCH(req: Request, { params }: Params) {
 
   await prisma.payment.update({
     where: { paymentId: id },
-    data: { email },
+    data: { email: emailCheck.normalized },
   });
 
-  return NextResponse.json({ ok: true, email });
+  return NextResponse.json({ ok: true, email: emailCheck.normalized });
 }

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PRODUCT_IMAGES } from "../src/lib/product-images";
+import { DEFAULT_DEMO_WINNERS, serializeDemoWinners } from "../src/lib/demo-winners";
 
 const prisma = new PrismaClient();
 
@@ -38,6 +39,7 @@ async function main() {
       displayPlayersToday: 128,
       displayWinnersToday: 42,
       winnersDemoMode: true,
+      demoWinnersJson: serializeDemoWinners(DEFAULT_DEMO_WINNERS),
     },
   });
 

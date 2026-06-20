@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { adminApiErrorMessage } from "@/lib/admin-api-error";
 import { getRealBlindBoxStatsToday } from "@/lib/blindbox-stats";
+import { serializeDemoWinners } from "@/lib/demo-winners";
 import { DEFAULT_GRAND_PRIZE_VALUE, DEFAULT_BLIND_BOX_PRICE } from "@/lib/market";
 
 export async function GET() {
@@ -45,6 +46,7 @@ export async function PUT(req: Request) {
         statsDemoMode: body.statsDemoMode ?? true,
         displayPlayersToday: body.displayPlayersToday ?? 0,
         displayWinnersToday: body.displayWinnersToday ?? 0,
+        demoWinnersJson: body.demoWinnersJson ?? undefined,
       },
       create: {
         id: 1,
@@ -63,6 +65,7 @@ export async function PUT(req: Request) {
         statsDemoMode: body.statsDemoMode ?? true,
         displayPlayersToday: body.displayPlayersToday ?? 128,
         displayWinnersToday: body.displayWinnersToday ?? 42,
+        demoWinnersJson: body.demoWinnersJson ?? serializeDemoWinners([]),
       },
     });
     revalidatePath("/");

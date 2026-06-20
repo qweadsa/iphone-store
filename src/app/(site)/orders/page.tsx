@@ -5,6 +5,8 @@ import { Suspense, useEffect, useState } from "react";
 import { formatPrice } from "@/lib/products";
 import { useI18n } from "@/lib/i18n-context";
 import PrizeAddressForm from "@/components/PrizeAddressForm";
+import SupportedEmailHint from "@/components/SupportedEmailHint";
+import { getEmailValidationMessage, validateEmail } from "@/lib/email-validation";
 import type {
   BlindboxShippingStatus,
   GuestLookupRecord,
@@ -29,7 +31,7 @@ function isShopOrderRecord(
 
 function OrdersContent() {
   const searchParams = useSearchParams();
-  const { messages: m } = useI18n();
+  const { messages: m, locale } = useI18n();
   const o = m.orders;
 
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
@@ -39,16 +41,18 @@ function OrdersContent() {
   const [loading, setLoading] = useState(false);
 
   async function runLookup(em: string) {
-    const mail = em.trim();
-    if (!mail) {
-      setError(o.fillEmail);
+    const check = validateEmail(em);
+    if (!check.valid) {
+      setError(
+        check.reason === "empty" ? o.fillEmail : getEmailValidationMessage(check.reason, locale),
+      );
       return;
     }
     setLoading(true);
     setError("");
     setRecords([]);
     setQueriedEmail("");
-    const params = new URLSearchParams({ email: mail });
+    const params = new URLSearchParams({ email: check.normalized });
     const res = await fetch(`/api/orders?${params}`);
     const data = (await res.json()) as LookupResponse & { error?: string };
     setLoading(false);
@@ -108,6 +112,7 @@ function OrdersContent() {
           placeholder={o.email}
           className="site-input"
         />
+        <SupportedEmailHint compact />
         <button
           onClick={() => void runLookup(email)}
           disabled={loading}

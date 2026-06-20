@@ -1,17 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildUserCookie, hashPassword } from "@/lib/user-auth";
+import { getEmailValidationMessage, validateEmail } from "@/lib/email-validation";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const email = body.email?.trim().toLowerCase();
+    const emailCheck = validateEmail(String(body.email ?? ""));
     const password = body.password?.trim();
     const name = body.name?.trim();
 
-    if (!email || !password || !name) {
+    if (!name || !password) {
       return NextResponse.json({ error: "请填写完整信息" }, { status: 400 });
     }
+    if (!emailCheck.valid) {
+      return NextResponse.json(
+        { error: getEmailValidationMessage(emailCheck.reason, "zh") },
+        { status: 400 },
+      );
+    }
+    const email = emailCheck.normalized;
     if (password.length < 6) {
       return NextResponse.json({ error: "密码至少 6 位" }, { status: 400 });
     }

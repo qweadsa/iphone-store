@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/user-auth";
 import { createPayment } from "@/lib/payments/service";
 import type { PaymentPurpose } from "@/lib/payments/types";
+import { getEmailValidationMessage, validateEmail } from "@/lib/email-validation";
 
 export async function POST(req: Request) {
   try {
@@ -17,19 +18,24 @@ export async function POST(req: Request) {
     }
 
     const user = await getSessionUser();
-    const guestEmail = body.email?.trim().toLowerCase();
+    let payerEmail = user?.email;
 
     if (!user) {
-      if (!guestEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
-        return NextResponse.json({ error: "Guest email required" }, { status: 400 });
+      const emailCheck = validateEmail(String(body.email ?? ""));
+      if (!emailCheck.valid) {
+        return NextResponse.json(
+          { error: getEmailValidationMessage(emailCheck.reason, "zh") },
+          { status: 400 },
+        );
       }
+      payerEmail = emailCheck.normalized;
     }
 
     const result = await createPayment({
       amount,
       purpose,
       userId: user?.id,
-      email: user?.email ?? guestEmail,
+      email: payerEmail,
       metadata: body.metadata,
     });
 

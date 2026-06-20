@@ -2,11 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import HeroShowcaseEditor from "@/components/admin/HeroShowcaseEditor";
+import DemoWinnersEditor from "@/components/admin/DemoWinnersEditor";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { getPrizeRealOdds } from "@/lib/probability";
 import { displayPrizeName } from "@/lib/prize-display";
 import { formatAdminPrice } from "@/lib/market";
 import { parseHeroShowcaseJson, serializeHeroShowcase, type HeroShowcaseEntry } from "@/lib/hero-showcase";
+import {
+  parseDemoWinners,
+  serializeDemoWinners,
+  type DemoWinnerEntry,
+} from "@/lib/demo-winners";
 import { resolveFulfillmentType, willShowPrizeInPool } from "@/lib/blindbox-prize-utils";
 import type { FulfillmentType } from "@/types/blindbox";
 
@@ -43,6 +49,7 @@ type Config = {
   statsDemoMode?: boolean;
   displayPlayersToday?: number;
   displayWinnersToday?: number;
+  demoWinners?: DemoWinnerEntry[];
 };
 
 const TIERS = [
@@ -151,6 +158,7 @@ export default function BlindBoxAdminPage() {
         statsDemoMode: d.config?.statsDemoMode !== false,
         displayPlayersToday: d.config?.displayPlayersToday ?? 128,
         displayWinnersToday: d.config?.displayWinnersToday ?? 42,
+        demoWinners: parseDemoWinners(d.config?.demoWinnersJson),
       });
       setPrizes((d.prizes ?? []).map((p: Record<string, unknown>) => normalizePrize(p)));
       setFrontendPoolCount(poolCount);
@@ -180,13 +188,14 @@ export default function BlindBoxAdminPage() {
   async function saveConfig() {
     if (!config) return;
     setMsg("保存中...");
-    const { heroShowcase, ...rest } = config;
+    const { heroShowcase, demoWinners, ...rest } = config;
     const res = await fetch("/api/admin/blindbox", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...rest,
         heroShowcaseJson: serializeHeroShowcase(heroShowcase),
+        demoWinnersJson: serializeDemoWinners(demoWinners ?? []),
         grandPrizeImageUrl:
           rest.grandPrizeImageUrl?.trim() ||
           heroShowcase.find((frame) => frame.src.trim())?.src ||
@@ -469,9 +478,25 @@ export default function BlindBoxAdminPage() {
                 checked={config.winnersDemoMode ?? true}
                 onChange={(e) => setConfig({ ...config, winnersDemoMode: e.target.checked })}
               />
-              <span className="text-white/70">前台中奖动态演示模式</span>
+              <span className="text-white/70">前台中奖动态演示模式（关闭后仅显示真实中奖记录）</span>
             </label>
           </div>
+
+          {(config.winnersDemoMode ?? true) && (
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
+              <h3 className="text-sm font-semibold text-emerald-200">演示中奖名单</h3>
+              <p className="mt-1 text-xs text-white/50">
+                首页「今日中奖动态」滚动列表。可自由增删改，保存后立即生效。未配置时使用内置默认{" "}
+                {parseDemoWinners(null).length} 条。
+              </p>
+              <div className="mt-4">
+                <DemoWinnersEditor
+                  value={config.demoWinners ?? []}
+                  onChange={(demoWinners) => setConfig({ ...config, demoWinners })}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
             <h3 className="text-sm font-semibold text-amber-200">首页数据卡片（今日玩家 / 今日中奖）</h3>

@@ -11,6 +11,8 @@ import { CHECKOUT_METHODS, DEFAULT_CHECKOUT_METHOD, getMethodLabel, type Payment
 import { getPaymentTransferRef } from "@/lib/payment-ref";
 import PaymentMethodIcon from "./PaymentMethodIcon";
 import DuitNowQrPanel from "@/components/DuitNowQrPanel";
+import SupportedEmailHint from "@/components/SupportedEmailHint";
+import { getEmailValidationMessage, isValidEmail, validateEmail } from "@/lib/email-validation";
 
 type Props = {
   amount: number;
@@ -42,7 +44,7 @@ export default function PaymentModal({
   onSuccess,
   metadata,
 }: Props) {
-  const { messages: m } = useI18n();
+  const { messages: m, locale } = useI18n();
   const p = m.payment;
   const { user, loading: userLoading, refresh } = useUser();
 
@@ -100,8 +102,13 @@ export default function PaymentModal({
   };
 
   function isValidGuestEmail(value: string) {
-    const email = value.trim().toLowerCase();
-    return email.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return isValidEmail(value);
+  }
+
+  function guestEmailError(value: string): string | null {
+    const result = validateEmail(value);
+    if (result.valid) return null;
+    return getEmailValidationMessage(result.reason, locale);
   }
 
   useEffect(() => {
@@ -229,7 +236,7 @@ export default function PaymentModal({
       return false;
     }
     if (!isValidGuestEmail(email)) {
-      if (required) setError(p.guestEmailInvalid);
+      if (required) setError(guestEmailError(email) ?? p.guestEmailInvalid);
       return false;
     }
     const res = await fetch(`/api/payments/${payment.paymentId}/contact`, {
@@ -368,7 +375,12 @@ export default function PaymentModal({
                     }}
                     placeholder={p.guestEmailPlaceholder}
                     className="site-input mt-1.5 w-full"
+                    onBlur={() => {
+                      const msg = guestEmailError(guestEmail);
+                      if (msg) setError(msg);
+                    }}
                   />
+                  <SupportedEmailHint compact className="mt-2" />
                   <p className="mt-1 text-[11px] text-white/40">
                     {preparingPayment
                       ? p.loading

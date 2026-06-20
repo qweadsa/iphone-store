@@ -20,6 +20,14 @@ export function adminApiErrorMessage(error: unknown, fallback: string): string {
     return "Prisma 客户端过期：请在项目目录运行 npx prisma generate，然后重启 npm run dev";
   }
 
+  if (message.includes("Unknown argument `demoWinnersJson`")) {
+    return "Prisma 客户端过期：请在项目目录运行 npx prisma generate，然后重启 npm run dev";
+  }
+
+  if (/Unknown column [`']demo_winners_json[`']/.test(message)) {
+    return "数据库缺少 demo_winners_json 字段：请运行 npm run db:push，或在 Navicat 执行 database/init.sql 末尾的 ALTER 语句";
+  }
+
   if (/Unknown column [`']display_odds[`']/.test(message)) {
     return "数据库缺少 display_odds 字段：请运行 npm run db:push，或在 Navicat 执行 database/init.sql 末尾的 ALTER 语句";
   }

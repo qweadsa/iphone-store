@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import PrizeAddressForm from "@/components/PrizeAddressForm";
+import SupportedEmailHint from "@/components/SupportedEmailHint";
+import { getEmailValidationMessage, validateEmail } from "@/lib/email-validation";
 import { useI18n } from "@/lib/i18n-context";
 import { useUser } from "@/lib/user-context";
 import {
@@ -27,7 +29,7 @@ function PrizeClaimForm() {
   const searchParams = useSearchParams();
   const paymentId = searchParams.get("paymentId")?.trim() ?? "";
   const emailParam = searchParams.get("email")?.trim() ?? "";
-  const { messages: m } = useI18n();
+  const { messages: m, locale } = useI18n();
   const c = m.prizeClaim;
   const o = m.orders;
   const { user } = useUser();
@@ -64,16 +66,18 @@ function PrizeClaimForm() {
   }, [emailParam, paymentId]);
 
   async function runEmailLookup(em: string) {
-    const mail = em.trim();
-    if (!mail) {
-      setLookupError(o.fillEmail);
+    const check = validateEmail(em);
+    if (!check.valid) {
+      setLookupError(
+        check.reason === "empty" ? o.fillEmail : getEmailValidationMessage(check.reason, locale),
+      );
       return;
     }
     setLookupLoading(true);
     setLookupError("");
     setPendingRecords([]);
     setLookupDone(false);
-    const params = new URLSearchParams({ email: mail });
+    const params = new URLSearchParams({ email: check.normalized });
     const res = await fetch(`/api/orders?${params}`);
     const data = (await res.json()) as LookupResponse & { error?: string };
     setLookupLoading(false);
@@ -153,6 +157,7 @@ function PrizeClaimForm() {
           placeholder={c.email}
           className="site-input"
         />
+        <SupportedEmailHint compact />
         <button
           onClick={() => void runEmailLookup(lookupEmail)}
           disabled={lookupLoading}

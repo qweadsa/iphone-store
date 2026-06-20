@@ -19,6 +19,12 @@ import { getPrizeImageUrl } from "@/lib/prize-images";
 import PrizeVisual from "@/components/PrizeVisual";
 import { getPrizeDisplayOdds } from "@/lib/probability";
 import { resolveHeroShowcaseFrames } from "@/lib/hero-showcase";
+import {
+  demoWinnerIcon,
+  formatDemoWinnerTimeLabel,
+  resolveDemoWinnerMinutesAgo,
+  type DemoWinnerEntry,
+} from "@/lib/demo-winners";
 import { useHashScroll } from "@/lib/use-hash-scroll";
 import type { HeroShowcaseEntry } from "@/lib/hero-showcase";
 import type { BlindBoxPrize } from "@/types/blindbox";
@@ -100,6 +106,7 @@ type Config = {
   grandPrizeImageUrl?: string | null;
   heroShowcase?: HeroShowcaseEntry[];
   winnersDemoMode?: boolean;
+  demoWinners?: DemoWinnerEntry[];
 };
 
 type Stats = {
@@ -178,17 +185,20 @@ export default function BlindBoxLanding({
         icon: r.prizeType === "grand" ? "🏆" : r.prizeType === "credit" ? "💰" : "🎁",
       }));
     }
-    if (config.winnersDemoMode !== false) {
-      return l.winners.map((text, i) => ({
-        id: `demo-${i}`,
-        text,
-        isGrand: text.toLowerCase().includes("iphone") || text.includes("大奖"),
-        timeLabel: i === 0 ? (locale === "zh" ? "刚刚" : "Just now") : locale === "zh" ? `${i * 2} 分钟前` : `${i * 2} min ago`,
-        icon: text.toLowerCase().includes("iphone") ? "🏆" : "🎁",
-      }));
+    if (config.winnersDemoMode !== false && config.demoWinners?.length) {
+      return config.demoWinners.map((entry, i) => {
+        const mins = resolveDemoWinnerMinutesAgo(entry, i);
+        return {
+          id: `demo-${i}`,
+          text: entry.text,
+          isGrand: !!entry.isGrand,
+          timeLabel: formatDemoWinnerTimeLabel(mins, locale),
+          icon: demoWinnerIcon(entry),
+        };
+      });
     }
     return [];
-  }, [publicWinners, config.winnersDemoMode, locale, l.winners, renderedAt]);
+  }, [publicWinners, config.winnersDemoMode, config.demoWinners, locale, renderedAt]);
 
   const floatingChips = useMemo(() => {
     const legendary = prizes.find((p) => p.tier === "legendary" && isPoolVisiblePrize(p));

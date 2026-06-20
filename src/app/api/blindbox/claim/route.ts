@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/user-auth";
 import { needsShippingClaim, getPrizeFulfillment } from "@/lib/blindbox-fulfillment";
+import { getEmailValidationMessage, validateEmail } from "@/lib/email-validation";
 import type { BlindBoxPrize } from "@/types/blindbox";
 
 export async function GET(req: Request) {
@@ -75,11 +76,20 @@ export async function POST(req: Request) {
     }
 
     const name = body.name?.trim();
-    const email = body.email?.trim();
+    const emailRaw = body.email?.trim();
     const address = body.address?.trim();
-    if (!name || !email || !address) {
+    if (!name || !emailRaw || !address) {
       return NextResponse.json({ error: "请填写姓名、邮箱和地址" }, { status: 400 });
     }
+
+    const emailCheck = validateEmail(emailRaw);
+    if (!emailCheck.valid) {
+      return NextResponse.json(
+        { error: getEmailValidationMessage(emailCheck.reason, "zh") },
+        { status: 400 },
+      );
+    }
+    const email = emailCheck.normalized;
 
     const updated = await prisma.blindBoxDraw.update({
       where: { id: draw.id },
