@@ -36,13 +36,26 @@ export function mapDbPrize(r: {
   };
 }
 
-function resolveFulfillmentType(
+/** DB 发奖类型 + 标识 → 前台/抽奖实际使用的类型 */
+export function resolveFulfillmentType(
   fulfillmentType: string | null | undefined,
   prizeType: string,
 ): FulfillmentType {
   const ft = fulfillmentType?.trim();
-  if (ft && ft !== "none") return ft as FulfillmentType;
+  // 明确选「仅展示」时保留 none，不因标识 retry 被推断成安慰奖
+  if (ft === "none") return "none";
+  if (ft) return ft as FulfillmentType;
   return inferFulfillment(prizeType);
+}
+
+export function willShowPrizeInPool(prize: {
+  active?: boolean | null;
+  showInPool?: boolean | null;
+  fulfillmentType?: string | null;
+  prizeType: string;
+}): boolean {
+  const ft = resolveFulfillmentType(prize.fulfillmentType, prize.prizeType);
+  return prize.active !== false && prize.showInPool !== false && ft !== "retry";
 }
 
 function inferFulfillment(prizeType: string): FulfillmentType {

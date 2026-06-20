@@ -7,6 +7,7 @@ import { getPrizeRealOdds } from "@/lib/probability";
 import { displayPrizeName } from "@/lib/prize-display";
 import { formatAdminPrice } from "@/lib/market";
 import { parseHeroShowcaseJson, serializeHeroShowcase, type HeroShowcaseEntry } from "@/lib/hero-showcase";
+import { resolveFulfillmentType, willShowPrizeInPool } from "@/lib/blindbox-prize-utils";
 import type { FulfillmentType } from "@/types/blindbox";
 
 type Prize = {
@@ -79,7 +80,12 @@ function emptyPrize(sortOrder: number): Omit<Prize, "id"> {
 }
 
 function willShowOnFrontend(prize: Prize): boolean {
-  return prize.active && prize.showInPool && prize.fulfillmentType !== "retry";
+  return willShowPrizeInPool({
+    active: prize.active,
+    showInPool: prize.showInPool,
+    fulfillmentType: prize.fulfillmentType,
+    prizeType: prize.prizeType,
+  });
 }
 
 function normalizePrizeForSave(prize: Prize): Prize {
@@ -611,8 +617,12 @@ export default function BlindBoxAdminPage() {
             const expanded = expandedIds.has(prize.id);
             const poolVisible = willShowOnFrontend(prize);
             const poolPos = poolPositions.get(prize.id);
+            const resolvedFulfillment = resolveFulfillmentType(
+              prize.fulfillmentType,
+              prize.prizeType,
+            );
             const frontendName = displayPrizeName(
-              { key: prize.prizeType, name: prize.name, fulfillmentType: prize.fulfillmentType },
+              { key: prize.prizeType, name: prize.name, fulfillmentType: resolvedFulfillment },
               "zh",
             );
             return (
@@ -664,7 +674,18 @@ export default function BlindBoxAdminPage() {
                     </div>
                     <p className="mt-0.5 text-xs text-white/45">
                       前台显示「{frontendName}」· {displayLabel} · 标识 {prize.prizeType}
+                      {resolvedFulfillment !== prize.fulfillmentType && (
+                        <span className="text-amber-300/90">
+                          {" "}
+                          · 实际发奖 {resolvedFulfillment}
+                        </span>
+                      )}
                     </p>
+                    {prize.prizeType === "retry" && prize.fulfillmentType === "none" && (
+                      <p className="mt-1 text-[11px] font-medium text-amber-300">
+                        标识仍为 retry，建议改成 airpods 等新标识，避免与安慰奖混淆
+                      </p>
+                    )}
                   </div>
                   <span className="shrink-0 text-white/40">{expanded ? "▲" : "▼"}</span>
                 </button>
