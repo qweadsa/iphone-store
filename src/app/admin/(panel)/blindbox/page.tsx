@@ -7,6 +7,7 @@ import { getPrizeRealOdds } from "@/lib/probability";
 import { displayPrizeName } from "@/lib/prize-display";
 import { formatAdminPrice } from "@/lib/market";
 import { parseHeroShowcaseJson, serializeHeroShowcase, type HeroShowcaseEntry } from "@/lib/hero-showcase";
+import type { FulfillmentType } from "@/types/blindbox";
 
 type Prize = {
   id: number;
@@ -14,7 +15,7 @@ type Prize = {
   prizeType: string;
   subtitle: string | null;
   tier: string;
-  fulfillmentType: string;
+  fulfillmentType: FulfillmentType;
   weight: number;
   displayOdds: string | null;
   emoji: string;
@@ -96,7 +97,7 @@ function normalizePrize(raw: Record<string, unknown>): Prize {
     prizeType: String(raw.prizeType ?? raw.prize_type ?? ""),
     subtitle: (raw.subtitle as string | null) ?? null,
     tier: String(raw.tier ?? "rare"),
-    fulfillmentType: String(raw.fulfillmentType ?? raw.fulfillment_type ?? "none"),
+    fulfillmentType: String(raw.fulfillmentType ?? raw.fulfillment_type ?? "none") as FulfillmentType,
     weight: Number(raw.weight) || 0,
     displayOdds: (raw.displayOdds as string | null) ?? (raw.display_odds as string | null) ?? null,
     emoji: String(raw.emoji ?? "🎁"),
@@ -734,7 +735,7 @@ export default function BlindBoxAdminPage() {
                     <select
                       value={prize.fulfillmentType}
                       onChange={(e) => {
-                        const fulfillmentType = e.target.value;
+                        const fulfillmentType = e.target.value as FulfillmentType;
                         if (fulfillmentType === "retry") {
                           updatePrize(idx, { fulfillmentType, showInPool: false });
                         } else {
