@@ -16,6 +16,8 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -23,6 +25,9 @@ body {
   color: var(--color-ink);
   background: var(--color-page);
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .site-input {
@@ -369,10 +374,11 @@ body {
   position: relative;
   display: flex;
   width: 100%;
+  max-width: 100%;
   min-height: 260px;
   align-items: center;
   justify-content: center;
-  overflow: visible;
+  overflow: hidden;
   perspective: 900px;
   perspective-origin: 50% 48%;
 }
@@ -488,6 +494,22 @@ body {
   filter: drop-shadow(0 24px 36px rgba(0, 0, 0, 0.55));
   user-select: none;
   pointer-events: none;
+}
+
+@media (max-width: 1023px) {
+  .hero-phone-stage {
+    min-height: 240px;
+  }
+
+  .hero-phone-sway {
+    animation: none;
+    transform: rotateY(-8deg) rotateX(2deg);
+  }
+
+  .hero-phone-stack {
+    --phone-w: clamp(160px, 46vw, 220px);
+    --phone-h: clamp(210px, 58vw, 290px);
+  }
 }
 
 @media (min-width: 1024px) {

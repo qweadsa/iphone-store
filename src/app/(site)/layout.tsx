@@ -13,9 +13,11 @@ export default function SiteLayout({
     <I18nProvider>
       <UserProvider>
         <CartProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip">
+            <Header />
+            <main className="min-w-0 flex-1">{children}</main>
+            <Footer />
+          </div>
         </CartProvider>
       </UserProvider>
     </I18nProvider>

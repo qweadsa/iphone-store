@@ -75,7 +75,7 @@ export default function HeroGrandPrizeCard({
             </div>
           </div>
 
-          <div className="relative flex min-h-[260px] flex-1 items-center justify-center py-1 lg:min-h-[300px] lg:flex-[0.54] lg:py-2">
+          <div className="relative flex min-h-[260px] flex-1 items-center justify-center overflow-hidden py-1 lg:min-h-[300px] lg:flex-[0.54] lg:py-2">
             <div className="absolute right-0 top-0 z-20 rounded-full bg-gradient-to-r from-[#FF2D2D] to-[#FF7A00] px-3 py-1 text-[10px] font-black tracking-wider text-white shadow-lg">
               {labels.winBadge}
             </div>

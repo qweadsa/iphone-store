@@ -93,9 +93,9 @@ export default function Header() {
   const userLabel = user?.name?.trim() || user?.email?.split("@")[0] || m.nav.login;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[rgba(3,3,10,0.82)] text-[#F5F5F7] backdrop-blur-[16px]">
-      <div className="mx-auto flex h-[54px] max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" prefetch={false} className="shrink-0 text-[14px] font-bold tracking-tight">
+    <header className="sticky top-0 z-50 overflow-x-clip border-b border-white/[0.08] bg-[rgba(3,3,10,0.82)] text-[#F5F5F7] backdrop-blur-[16px]">
+      <div className="mx-auto flex h-[54px] min-w-0 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6">
+        <Link href="/" prefetch={false} className="shrink-0 text-[13px] font-bold tracking-tight sm:text-[14px]">
           🎁 Mystery Box
         </Link>
 
@@ -116,7 +116,7 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2">
           <LanguageSwitcher />
           {user ? (
             <>
@@ -185,7 +185,7 @@ export default function Header() {
                 href={supportUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[12px] font-medium ring-1 transition sm:px-3 sm:text-[13px] ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1.5 text-[12px] font-medium ring-1 transition sm:px-3 sm:text-[13px] ${
                   supportChannel === "whatsapp"
                     ? "bg-[#25D366]/15 text-[#7ee8a3] ring-[#25D366]/30 hover:bg-[#25D366]/25"
                     : "bg-[#229ED9]/15 text-[#5ebef7] ring-[#229ED9]/30 hover:bg-[#229ED9]/25"
@@ -197,7 +197,7 @@ export default function Header() {
                 ) : (
                   <TelegramIcon className="h-4 w-4 shrink-0" />
                 )}
-                <span>{m.nav.support}</span>
+                <span className="hidden sm:inline">{m.nav.support}</span>
               </a>
             ) : (
               <span
@@ -205,7 +205,7 @@ export default function Header() {
                 title={m.nav.supportPending}
               >
                 <WhatsAppIcon className="h-4 w-4 shrink-0 opacity-50" />
-                <span>{m.nav.support}</span>
+                <span className="hidden sm:inline">{m.nav.support}</span>
               </span>
             ))}
         </div>

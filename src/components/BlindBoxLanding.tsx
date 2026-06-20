@@ -239,7 +239,7 @@ export default function BlindBoxLanding({
   };
 
   return (
-    <div className="bg-[#03030A] pb-24 text-[#F5F5F7] md:pb-0">
+    <div className="overflow-x-clip bg-[#03030A] pb-24 text-[#F5F5F7] md:pb-0">
       <MobileFixedCta
         fullPrice={config.price}
         priceLabel={l.perOpen}
@@ -260,7 +260,7 @@ export default function BlindBoxLanding({
               {mob.activityTag}
             </span>
 
-            <h1 className="mt-3 text-[40px] font-black leading-[1.05] tracking-tight sm:text-[44px] lg:text-[52px] xl:text-[58px]">
+            <h1 className="mt-3 text-[32px] font-black leading-[1.05] tracking-tight sm:text-[44px] lg:text-[52px] xl:text-[58px]">
               <GoldLine text={mob.titleLine1} gold={mob.titleHighlight1} />
               <br />
               <GoldLine text={mob.titleLine2} gold={mob.titleHighlight2} baseClass="text-[#F5F5F7]" />
@@ -406,8 +406,8 @@ export default function BlindBoxLanding({
             ))}
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-[20px] border border-white/[0.08] bg-white/[0.04]">
-            <table className="w-full text-left text-sm">
+          <div className="mt-8 overflow-x-auto rounded-[20px] border border-white/[0.08] bg-white/[0.04]">
+            <table className="w-full min-w-[280px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/[0.08] text-white/50">
                   <th className="px-4 py-3 font-medium">{l.tablePrize}</th>
