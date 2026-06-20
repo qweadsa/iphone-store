@@ -611,7 +611,7 @@ export default function BlindBoxAdminPage() {
             );
             const frontendName = displayPrizeName(
               { key: prize.prizeType, name: prize.name, fulfillmentType: resolvedFulfillment },
-              "zh",
+              "ms",
             );
             return (
               <div
