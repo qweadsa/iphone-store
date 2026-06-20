@@ -68,7 +68,7 @@ export default function DemoWinnersEditor({ value, onChange }: Props) {
             <input
               value={row.text}
               onChange={(e) => updateRow(index, { text: e.target.value })}
-              placeholder="例：吉隆坡 Ahmad 抽中 iPhone 17 Pro Max"
+              placeholder="Contoh: Ahmad dari KL memenangi iPhone 17 Pro Max"
               className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm"
             />
             <input

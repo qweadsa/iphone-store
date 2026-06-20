@@ -5,42 +5,43 @@ export type DemoWinnerEntry = {
   minutesAgo?: number | null;
 };
 
+/** 默认 35 条演示中奖（马来语 · 对齐当前奖池 · 以 iPhone / 相机 / 主机等大件为主） */
 export const DEFAULT_DEMO_WINNERS: DemoWinnerEntry[] = [
-  { text: "吉隆坡 Ahmad 抽中 iPhone 17 Pro Max", isGrand: true, minutesAgo: 0 },
-  { text: "槟城 Lim 获得 MacBook Pro 16", isGrand: true, minutesAgo: 1 },
-  { text: "柔佛 Siti 获得 RM50 商城抵扣券", minutesAgo: 2 },
-  { text: "雪兰莪 Farah 抽中 iPhone 17 Pro Max", isGrand: true, minutesAgo: 3 },
-  { text: "沙巴 Hafiz 获得 AirPods Max", minutesAgo: 4 },
-  { text: "马六甲 Raj 获得 RTX 4090 显卡", minutesAgo: 5 },
-  { text: "霹雳 Wei 获得 8 折优惠券", minutesAgo: 6 },
-  { text: "登嘉楼 Nur 获得精品手机壳", minutesAgo: 7 },
-  { text: "森美兰 David 抽中 iPhone 17 Pro Max", isGrand: true, minutesAgo: 8 },
-  { text: "吉打 Aina 获得 RM50 商城抵扣券", minutesAgo: 9 },
-  { text: "砂拉越 Ken 获得 OLED 4K 显示器", minutesAgo: 10 },
-  { text: "彭亨 Mei 获得 iPad Pro", minutesAgo: 11 },
-  { text: "布城 Arif 获得 ROG 电竞主机", minutesAgo: 12 },
-  { text: "玻璃市 Lisa 获得 8 折优惠券", minutesAgo: 13 },
-  { text: "吉隆坡 Jason 抽中 iPhone 17 Pro Max", isGrand: true, minutesAgo: 14 },
-  { text: "槟城 Priya 获得 Sony A7 IV 相机", minutesAgo: 15 },
-  { text: "柔佛 Hakim 获得 NVMe SSD 2TB", minutesAgo: 16 },
-  { text: "雪兰莪 Yen 获得机械键盘", minutesAgo: 17 },
-  { text: "沙巴 Daniel 获得 RM50 商城抵扣券", minutesAgo: 18 },
-  { text: "马六甲 Sofia 获得 AirPods Max", minutesAgo: 19 },
-  { text: "霹雳 Kumar 抽中 iPhone 17 Pro Max", isGrand: true, minutesAgo: 21 },
-  { text: "登嘉楼 Amira 获得 DDR5 内存条", minutesAgo: 23 },
-  { text: "森美兰 Chen 获得精品手机壳", minutesAgo: 25 },
-  { text: "吉打 Irfan 获得 8 折优惠券", minutesAgo: 27 },
-  { text: "砂拉越 Grace 获得 MacBook Pro 16", isGrand: true, minutesAgo: 29 },
-  { text: "彭亨 Adam 获得 RM50 商城抵扣券", minutesAgo: 31 },
-  { text: "布城 Zara 获得 RTX 4090 显卡", minutesAgo: 33 },
-  { text: "吉隆坡 Ben 获得 OLED 4K 显示器", minutesAgo: 35 },
-  { text: "槟城 Nadia 抽中 iPhone 17 Pro Max", isGrand: true, minutesAgo: 37 },
-  { text: "柔佛 Marcus 获得 iPad Pro", minutesAgo: 39 },
-  { text: "雪兰莪 Elaine 获得 ROG 电竞主机", minutesAgo: 41 },
-  { text: "沙巴 Faiz 获得 Sony A7 IV 相机", minutesAgo: 43 },
-  { text: "马六甲 Joy 获得 8 折优惠券", minutesAgo: 45 },
-  { text: "霹雳 Omar 获得 RM50 商城抵扣券", minutesAgo: 47 },
-  { text: "吉隆坡 Sarah 抽中 iPhone 17 Pro Max", isGrand: true, minutesAgo: 50 },
+  { text: "Ahmad dari KL memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 0 },
+  { text: "Siti dari Johor memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 1 },
+  { text: "Lim dari Pulau Pinang memenangi MacBook Pro 16\"", isGrand: true, minutesAgo: 2 },
+  { text: "Farah dari Selangor memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 3 },
+  { text: "Hafiz dari Sabah memenangi Sony A7 IV Camera", minutesAgo: 4 },
+  { text: "Raj dari Melaka memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 5 },
+  { text: "Nur dari Terengganu memenangi ROG Gaming Desktop", minutesAgo: 6 },
+  { text: "Wei dari Perak memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 7 },
+  { text: "David dari Negeri Sembilan memenangi RTX 4090 Founders", minutesAgo: 8 },
+  { text: "Aina dari Kedah memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 9 },
+  { text: "Ken dari Sarawak memenangi iPad Pro M4", minutesAgo: 10 },
+  { text: "Mei dari Pahang memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 11 },
+  { text: "Arif dari Putrajaya memenangi MacBook Pro 16\"", isGrand: true, minutesAgo: 12 },
+  { text: "Priya dari Pulau Pinang memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 13 },
+  { text: "Hakim dari Johor memenangi ROG Gaming Desktop", minutesAgo: 14 },
+  { text: "Yen dari Selangor memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 15 },
+  { text: "Daniel dari Sabah memenangi Sony A7 IV Camera", minutesAgo: 16 },
+  { text: "Sofia dari Melaka memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 17 },
+  { text: "Kumar dari Perak memenangi MacBook Pro 16\"", isGrand: true, minutesAgo: 18 },
+  { text: "Amira dari Terengganu memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 19 },
+  { text: "Chen dari Negeri Sembilan memenangi 4K OLED Monitor", minutesAgo: 20 },
+  { text: "Irfan dari Kedah memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 21 },
+  { text: "Grace dari Sarawak memenangi RTX 4090 Founders", minutesAgo: 22 },
+  { text: "Adam dari Pahang memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 23 },
+  { text: "Zara dari Putrajaya memenangi AirPods Max", minutesAgo: 24 },
+  { text: "Jason dari KL memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 25 },
+  { text: "Nadia dari Pulau Pinang memenangi MacBook Pro 16\"", isGrand: true, minutesAgo: 26 },
+  { text: "Marcus dari Johor memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 27 },
+  { text: "Elaine dari Selangor memenangi ROG Gaming Desktop", minutesAgo: 28 },
+  { text: "Faiz dari Sabah memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 29 },
+  { text: "Joy dari Melaka memenangi Sony A7 IV Camera", minutesAgo: 30 },
+  { text: "Omar dari Perak memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 31 },
+  { text: "Sarah dari KL memenangi iPad Pro M4", minutesAgo: 32 },
+  { text: "Rizal dari Sarawak memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 33 },
+  { text: "Lisa dari Perlis memenangi iPhone 17 Pro Max", isGrand: true, minutesAgo: 34 },
 ];
 
 export function parseDemoWinners(raw: unknown): DemoWinnerEntry[] {
@@ -52,7 +53,7 @@ export function parseDemoWinners(raw: unknown): DemoWinnerEntry[] {
         const text = item.trim();
         return {
           text,
-          isGrand: /iphone/i.test(text),
+          isGrand: /iphone|macbook/i.test(text),
         };
       }
       if (item && typeof item === "object" && "text" in item) {
@@ -60,7 +61,7 @@ export function parseDemoWinners(raw: unknown): DemoWinnerEntry[] {
         if (!row.text?.trim()) return null;
         return {
           text: row.text.trim(),
-          isGrand: row.isGrand ?? /iphone/i.test(row.text),
+          isGrand: row.isGrand ?? /iphone|macbook/i.test(row.text),
           minutesAgo: row.minutesAgo ?? null,
         };
       }
@@ -105,7 +106,10 @@ export function resolveDemoWinnerMinutesAgo(
 export function demoWinnerIcon(entry: DemoWinnerEntry): string {
   if (entry.isGrand) return "🏆";
   const t = entry.text.toLowerCase();
-  if (/抵扣|credit|kredit|rm50|store credit/i.test(t)) return "💰";
-  if (/优惠券|coupon|diskaun|折扣/i.test(t)) return "🎟️";
+  if (/kredit|store credit|rm50/i.test(t)) return "💰";
+  if (/kupon|coupon|diskaun/i.test(t)) return "🎟️";
+  if (/sony|camera|kamera/i.test(t)) return "📷";
+  if (/rog|gaming|rtx|desktop|pc/i.test(t)) return "🎮";
+  if (/macbook|ipad|iphone/i.test(t)) return "📱";
   return "🎁";
 }
