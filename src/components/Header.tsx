@@ -98,8 +98,8 @@ export default function Header() {
   const userLabel = user?.name?.trim() || user?.email?.split("@")[0] || m.nav.login;
 
   return (
-    <header className="sticky top-0 z-50 overflow-x-clip border-b border-white/[0.08] bg-[rgba(3,3,10,0.82)] text-[#F5F5F7] backdrop-blur-[16px]">
-      <div className="mx-auto flex h-[54px] min-w-0 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6">
+    <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[rgba(3,3,10,0.82)] text-[#F5F5F7] backdrop-blur-[16px]">
+      <div className="mx-auto flex h-[54px] min-w-0 max-w-6xl items-center justify-between gap-2 overflow-x-clip px-3 sm:gap-3 sm:px-6">
         <Link href="/" prefetch={false} className="shrink-0 text-[13px] font-bold tracking-tight sm:text-[14px]">
           🎁 Mystery Box
         </Link>
@@ -121,7 +121,7 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="flex min-w-0 shrink items-center gap-1.5 sm:gap-2">
+        <div className="relative z-[60] flex min-w-0 shrink items-center gap-1.5 sm:gap-2">
           <LanguageSwitcher />
           {user ? (
             <>
