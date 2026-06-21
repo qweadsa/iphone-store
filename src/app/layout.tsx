@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ms">
       <body className="flex min-h-screen min-w-0 flex-col overflow-x-clip antialiased">
         {children}
       </body>
