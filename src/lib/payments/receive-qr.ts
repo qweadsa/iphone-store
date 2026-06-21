@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import QRCode from "qrcode";
 import { findPaymentQrWebPath } from "@/lib/payment-qr-files";
 import { type PaymentMethodId } from "./methods";

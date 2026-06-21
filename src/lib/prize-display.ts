@@ -23,10 +23,10 @@ export function displayPrizeName(
   prize: Pick<BlindBoxPrize, "key" | "name" | "fulfillmentType">,
   locale: string = "ms",
 ): string {
+  const lang = contentLang(locale);
   const customName = prize.name?.trim();
   if (customName) return lang === "zh" ? toTraditional(customName) : customName;
 
-  const lang = contentLang(locale);
   const kind = fulfillmentOf(prize);
   if (kind === "retry") return lang === "zh" ? toTraditional(RETRY_LABELS[lang]) : RETRY_LABELS[lang];
   if (kind === "coupon") return lang === "zh" ? toTraditional(COUPON_LABELS[lang]) : COUPON_LABELS[lang];
