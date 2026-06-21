@@ -99,7 +99,7 @@ export default function LanguageSwitcher() {
             >
               <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" />
               <p className="mb-2 text-center text-sm font-semibold text-white/70">
-                {locale === "zh" ? "选择语言" : locale === "ms" ? "Pilih Bahasa" : "Select Language"}
+                {locale === "zh" ? "選擇語言" : locale === "ms" ? "Pilih Bahasa" : "Select Language"}
               </p>
               <LocaleOptions locale={locale} onPick={pick} className="space-y-1" />
             </div>

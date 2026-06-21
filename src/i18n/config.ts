@@ -8,7 +8,7 @@ export const defaultLocale: Locale = "ms";
 export const localeLabels: Record<Locale, string> = {
   ms: "Bahasa Melayu",
   en: "English (US)",
-  zh: "简体中文",
+  zh: "繁體中文",
   ja: "日本語",
   ko: "한국어",
 };
@@ -16,7 +16,7 @@ export const localeLabels: Record<Locale, string> = {
 export const localeFlags: Record<Locale, string> = {
   ms: "🇲🇾",
   en: "🇺🇸",
-  zh: "🇨🇳",
+  zh: "🇹🇼",
   ja: "🇯🇵",
   ko: "🇰🇷",
 };
