@@ -16,7 +16,7 @@ export const localeLabels: Record<Locale, string> = {
 export const localeFlags: Record<Locale, string> = {
   ms: "🇲🇾",
   en: "🇺🇸",
-  zh: "🇹🇼",
+  zh: "🇭🇰",
   ja: "🇯🇵",
   ko: "🇰🇷",
 };
