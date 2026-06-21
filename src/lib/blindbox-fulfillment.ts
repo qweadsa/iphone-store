@@ -1,4 +1,5 @@
 import type { BlindBoxPrize } from "@/types/blindbox";
+import { zhText } from "@/lib/zh-hant";
 
 /** 从奖品名称解析商城抵扣金额，如 "$50 Store Credit" → 50 */
 export function parseCreditAmount(prizeName: string): number {
@@ -19,9 +20,9 @@ export function formatWinnerLine(
   email?: string | null,
   locale: "zh" | "en" = "zh",
 ): string {
-  const who = email ? maskEmail(email) : locale === "zh" ? "玩家" : "Player";
+  const who = email ? maskEmail(email) : locale === "zh" ? zhText(locale, "玩家") : "Player";
   return locale === "zh"
-    ? `${who} 赢得 ${prizeName}`
+    ? zhText(locale, `${who} 赢得 ${prizeName}`)
     : `${who} won ${prizeName}`;
 }
 

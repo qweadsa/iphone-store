@@ -1,4 +1,6 @@
 /** 常用邮箱域名（付款 / 查单 / 填地址） */
+import { zhText } from "@/lib/zh-hant";
+
 export const SUPPORTED_EMAIL_DOMAINS = [
   "gmail.com",
   "googlemail.com",
@@ -120,16 +122,16 @@ export function getEmailValidationMessage(
   const zh = locale === "zh";
   const ms = locale === "ms";
   if (reason === "empty") {
-    if (zh) return "请填写邮箱";
+    if (zh) return zhText(locale, "请填写邮箱");
     if (ms) return "Sila isi email";
     return "Please enter your email";
   }
   if (reason === "format") {
-    if (zh) return "邮箱格式不正确，需包含 @ 和有效域名，例如 you@gmail.com";
+    if (zh) return zhText(locale, "邮箱格式不正确，需包含 @ 和有效域名，例如 you@gmail.com");
     if (ms) return "Format email tidak sah. Contoh: you@gmail.com";
     return "Invalid email format. Example: you@gmail.com";
   }
-  if (zh) return "请使用常用邮箱（如 Gmail、Yahoo、Outlook、Hotmail、iCloud、QQ、163 等）";
+  if (zh) return zhText(locale, "请使用常用邮箱（如 Gmail、Yahoo、Outlook、Hotmail、iCloud、QQ、163 等）");
   if (ms) return "Sila guna email biasa (Gmail, Yahoo, Outlook, Hotmail, iCloud, QQ, 163, dll.)";
   return "Please use a common email provider (Gmail, Yahoo, Outlook, Hotmail, iCloud, QQ, 163, etc.)";
 }

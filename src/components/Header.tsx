@@ -9,7 +9,7 @@ import { formatPrice } from "@/lib/products";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 function priceLocale(locale: string) {
-  if (locale === "zh") return "zh-CN";
+  if (locale === "zh") return "zh-HK";
   return locale;
 }
 

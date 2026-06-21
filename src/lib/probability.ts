@@ -1,3 +1,5 @@
+import { toTraditional } from "@/lib/zh-hant";
+
 export function calcProbability(weight: number, total: number): string {
   if (total === 0) return "0%";
   return `${((weight / total) * 100).toFixed(weight < 1 ? 2 : 1)}%`;
@@ -20,7 +22,7 @@ export function getPrizeDisplayOdds(
     return calcProbability(prize.weight, drawWeight);
   }
 
-  return locale === "zh" ? "展示" : "Display";
+  return locale === "zh" ? toTraditional("展示") : "Display";
 }
 
 /** 后台真实抽奖概率（仅按权重计算） */

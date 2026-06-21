@@ -12,6 +12,7 @@ import { displayPrizeName } from "@/lib/prize-display";
 import PaymentModal from "./PaymentModal";
 import GrandConfetti from "./GrandConfetti";
 import { injectConfigPrice } from "@/lib/locale-resolve";
+import { zhText } from "@/lib/zh-hant";
 import { useBlindBoxCheckout } from "@/lib/use-blindbox-checkout";
 
 const CaseOpeningReel = dynamic(() => import("./CaseOpeningReel"), {
@@ -222,8 +223,8 @@ export default function BlindBoxGame({ prizes, config, theme = "light" }: Props)
       />
 
       <p className="mt-4 text-center text-[12px] uppercase tracking-[0.2em] text-white/35">
-        {fetching && (locale === "ms" ? "Membuka..." : locale === "zh" ? "正在开启..." : "Opening...")}
-        {!fetching && phase === "idle" && (locale === "ms" ? "Pratonton kolam hadiah · gaya buka kotak" : locale === "zh" ? "向左滚动预览奖池 · CS 开箱风格" : "Scroll preview · CS case opening style")}
+        {fetching && (locale === "ms" ? "Membuka..." : locale === "zh" ? zhText(locale, "正在开启...") : "Opening...")}
+        {!fetching && phase === "idle" && (locale === "ms" ? "Pratonton kolam hadiah · gaya buka kotak" : locale === "zh" ? zhText(locale, "向左滚动预览奖池 · CS 开箱风格") : "Scroll preview · CS case opening style")}
         {!fetching && phase === "spinning" && b.drawing}
         {!fetching && phase === "done" && b.youWon}
       </p>

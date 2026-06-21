@@ -10,13 +10,15 @@ export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number]["key"];
 
 export const CATEGORY_KEYS = PRODUCT_CATEGORIES.map((c) => c.key);
 
+import { toTraditional } from "@/lib/zh-hant";
+
 export function getCategoryLabel(
   key: string,
   locale: "zh" | "en" = "zh",
 ): string {
   const cat = PRODUCT_CATEGORIES.find((c) => c.key === key);
   if (!cat) return key;
-  return locale === "zh" ? cat.labelZh : cat.labelEn;
+  return locale === "zh" ? toTraditional(cat.labelZh) : cat.labelEn;
 }
 
 export function isValidCategory(key: string): key is ProductCategory {

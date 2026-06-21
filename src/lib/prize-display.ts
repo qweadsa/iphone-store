@@ -1,5 +1,6 @@
 import type { BlindBoxPrize } from "@/types/blindbox";
 import { contentLang } from "@/lib/locale-resolve";
+import { toTraditional } from "@/lib/zh-hant";
 
 const RETRY_LABELS = {
   zh: "会员神秘券",
@@ -23,12 +24,12 @@ export function displayPrizeName(
   locale: string = "ms",
 ): string {
   const customName = prize.name?.trim();
-  if (customName) return customName;
+  if (customName) return lang === "zh" ? toTraditional(customName) : customName;
 
   const lang = contentLang(locale);
   const kind = fulfillmentOf(prize);
-  if (kind === "retry") return RETRY_LABELS[lang];
-  if (kind === "coupon") return COUPON_LABELS[lang];
+  if (kind === "retry") return lang === "zh" ? toTraditional(RETRY_LABELS[lang]) : RETRY_LABELS[lang];
+  if (kind === "coupon") return lang === "zh" ? toTraditional(COUPON_LABELS[lang]) : COUPON_LABELS[lang];
   return prize.name;
 }
 

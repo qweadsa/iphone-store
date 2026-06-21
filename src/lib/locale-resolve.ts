@@ -15,7 +15,7 @@ export function contentLang(locale: string): ContentLang {
 }
 
 export function htmlLang(locale: string): string {
-  if (locale === "zh") return "zh-CN";
+  if (locale === "zh") return "zh-HK";
   if (locale === "ms") return "ms-MY";
   if (locale === "ja") return "ja-JP";
   if (locale === "ko") return "ko-KR";
@@ -23,7 +23,7 @@ export function htmlLang(locale: string): string {
 }
 
 function priceLocaleTag(locale: string): string {
-  if (locale === "zh") return "zh-CN";
+  if (locale === "zh") return "zh-HK";
   if (locale === "ms") return "ms-MY";
   if (locale === "ja") return "ja-JP";
   if (locale === "ko") return "ko-KR";

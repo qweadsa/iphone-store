@@ -1,3 +1,5 @@
+import { zhText } from "@/lib/zh-hant";
+
 export type DemoWinnerEntry = {
   text: string;
   isGrand?: boolean;
@@ -84,11 +86,11 @@ export function serializeDemoWinners(entries: DemoWinnerEntry[]): DemoWinnerEntr
 
 export function formatDemoWinnerTimeLabel(minutesAgo: number, locale: string): string {
   if (minutesAgo <= 0) {
-    if (locale === "zh") return "刚刚";
+    if (locale === "zh") return zhText(locale, "刚刚");
     if (locale === "ms") return "Baru sahaja";
     return "Just now";
   }
-  if (locale === "zh") return `${minutesAgo} 分钟前`;
+  if (locale === "zh") return zhText(locale, `${minutesAgo} 分钟前`);
   if (locale === "ms") return `${minutesAgo} minit lalu`;
   return `${minutesAgo} min ago`;
 }

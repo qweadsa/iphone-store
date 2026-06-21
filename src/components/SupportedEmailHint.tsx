@@ -2,6 +2,7 @@
 
 import { COMMON_EMAIL_EXAMPLES, SUPPORTED_EMAIL_DOMAINS } from "@/lib/email-validation";
 import { useI18n } from "@/lib/i18n-context";
+import { zhText } from "@/lib/zh-hant";
 
 type Props = {
   compact?: boolean;
@@ -37,13 +38,13 @@ export default function SupportedEmailHint({ compact = false, className = "" }: 
         ))}
       </div>
       <p className="mt-2 text-[11px] text-white/40">
-        {locale === "zh" ? "示例：" : locale === "ms" ? "Contoh: " : "Examples: "}
+        {locale === "zh" ? zhText(locale, "示例：") : locale === "ms" ? "Contoh: " : "Examples: "}
         {COMMON_EMAIL_EXAMPLES.slice(0, 4).join(locale === "zh" ? "、" : ", ")}
       </p>
       <details className="mt-2">
         <summary className="cursor-pointer text-[11px] text-[#FFB800]/90">
           {locale === "zh"
-            ? `查看全部 ${SUPPORTED_EMAIL_DOMAINS.length} 个支持域名`
+            ? zhText(locale, `查看全部 ${SUPPORTED_EMAIL_DOMAINS.length} 个支持域名`)
             : locale === "ms"
               ? `Lihat semua ${SUPPORTED_EMAIL_DOMAINS.length} domain`
               : `View all ${SUPPORTED_EMAIL_DOMAINS.length} supported domains`}
