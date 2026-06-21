@@ -112,6 +112,34 @@ export const en = {
     faqTitle: "FAQ",
     perOpen: "/ per open",
     fixedCtaBtn: "Open Now",
+    brandStory: {
+      badge: "Official Announcement",
+      title: "Premium Devices in Malaysia — Special User Giveaway",
+      lead:
+        "In 2026, Foxconn Group (USA) signed a major electronics supply agreement with a Malaysian partner. We manufactured and delivered over 20,000 flagship phones plus large volumes of tablets, laptops, smartwatches, and wireless earbuds — all shipped to a Malaysia warehouse via international logistics.",
+      paragraphs: [
+        "What should have been a long-term partnership took an unexpected turn: after the goods arrived, the partner went silent and the company vanished. We have been unable to reach them since.",
+        "The inventory remains in overseas storage, incurring high daily fees. With the storage deadline approaching, the warehouse has issued a final handling notice. Facing rows of sealed boxes, we feel deep regret — yet we refuse to let brand-new devices sit idle or be destroyed.",
+        "After careful consideration, we are releasing part of this stranded inventory as a special benefit to our users. Rather than leaving these devices locked away, we want them in the hands of people who will truly use them.",
+      ],
+      prizeLine:
+        "Giveaway prizes include flagship phones, premium laptops, tablets, smartwatches, and wireless earbuds.",
+      thanks: "Thank you for your support and trust.",
+      closing: "May this setback become your moment of luck.",
+      wishes: "Good luck!",
+      urgencyLabel: "Storage deadline",
+      urgencyText:
+        "Warehouse space is limited. Selected devices are being released through today's mystery box event while stocks last.",
+      readMore: "Read full story",
+      readLess: "Show less",
+      cta: "Join the giveaway now",
+      highlights: [
+        { icon: "📱", value: "20,000+", label: "Flagship phones" },
+        { icon: "💻", value: "Premium", label: "Laptops & tablets" },
+        { icon: "⌚", value: "Smart", label: "Watches & earbuds" },
+        { icon: "🇲🇾", value: "MY", label: "Malaysia warehouse" },
+      ],
+    },
     mobile: {
       activityTag: "🔥 High-Chance iPhone Box Today",
       titleLine1: "High Chance",

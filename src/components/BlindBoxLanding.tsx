@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import BlindBoxGame from "@/components/BlindBoxGame";
 import HeroRewardPanel from "@/components/landing/HeroRewardPanel";
+import BrandStoryBanner from "@/components/landing/BrandStoryBanner";
 import MobileFixedCta from "@/components/landing/MobileFixedCta";
 import { useI18n } from "@/lib/i18n-context";
 import { formatMarketPrice, injectConfigPrice } from "@/lib/locale-resolve";
@@ -258,8 +259,10 @@ export default function BlindBoxLanding({
         buttonLabel={l.fixedCtaBtn}
       />
 
+      <BrandStoryBanner />
+
       {/* ── 首屏 Hero 双栏 ── */}
-      <section className="relative px-4 pt-[72px] md:px-6 md:pt-[80px]">
+      <section className="relative px-4 pt-6 md:px-6 md:pt-8">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -left-24 top-10 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(255,184,0,0.14)_0%,transparent_68%)]" />
           <div className="absolute right-0 top-1/4 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(255,90,31,0.1)_0%,transparent_65%)]" />

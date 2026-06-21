@@ -111,6 +111,34 @@ export const ms = {
     faqTitle: "Soalan Lazim",
     perOpen: "/ setiap buka",
     fixedCtaBtn: "Buka Sekarang",
+    brandStory: {
+      badge: "Pengumuman Rasmi",
+      title: "Stok Peranti Premium di Malaysia — Hadiah Khas untuk Pengguna",
+      lead:
+        "Pada 2026, Kumpulan Foxconn (AS) menandatangani perjanjian bekalan elektronik bernilai ratusan juta ringgit dengan rakan kongsi Malaysia. Kami menghasilkan dan menyerahkan lebih 20,000 telefon flagship serta tablet, komputer riba, jam pintar dan fon telinga tanpa wayar — semuanya dihantar ke pusat gudang Malaysia melalui logistik antarabangsa.",
+      paragraphs: [
+        "Kerjasama jangka panjang ini mengambil perubahan mengejut: selepas barang tiba, pihak rakan kongsi hilang tanpa kabar dan syarikat ditinggalkan kosong. Sehingga hari ini, kami masih tidak dapat menghubungi mereka.",
+        "Inventori masih terperangkap di gudang luar negara dengan caj penyimpanan harian yang tinggi. Tempoh penyimpanan hampir tamat dan pihak gudang telah mengeluarkan notis tindakan. Menghadapi kotak-kotak yang bertimbun, kami berasa kesal — namun kami tidak sanggup membiarkan peranti baharu terbiar atau dimusnahkan.",
+        "Selepas pertimbangan teliti, sebahagian stok terperangkap ini akan dikembalikan sebagai manfaat istimewa kepada pengguna. Daripada membiarkannya terkunci, kami mahu peranti ini sampai ke tangan mereka yang benar-benar memerlukannya.",
+      ],
+      prizeLine:
+        "Hadiah termasuk telefon flagship, komputer riba premium, tablet, jam pintar dan fon telinga tanpa wayar.",
+      thanks: "Terima kasih atas sokongan dan kepercayaan anda.",
+      closing: "Semoga kesedihan ini akhirnya menjadi tuah milik anda.",
+      wishes: "Semoga berjaya!",
+      urgencyLabel: "Tarikh akhir gudang",
+      urgencyText:
+        "Ruang gudang terhad. Peranti terpilih dilepaskan melalui acara kotak hadiah hari ini — selagi stok masih ada.",
+      readMore: "Baca cerita penuh",
+      readLess: "Tutup",
+      cta: "Sertai cabutan sekarang",
+      highlights: [
+        { icon: "📱", value: "20,000+", label: "Telefon flagship" },
+        { icon: "💻", value: "Premium", label: "Komputer riba & tablet" },
+        { icon: "⌚", value: "Pintar", label: "Jam & fon telinga" },
+        { icon: "🇲🇾", value: "MY", label: "Gudang Malaysia" },
+      ],
+    },
     mobile: {
       activityTag: "🔥 Kotak Hadiah iPhone Peluang Tinggi Hari Ini",
       titleLine1: "Peluang Tinggi",
