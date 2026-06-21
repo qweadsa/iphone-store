@@ -11,10 +11,10 @@ export default function BrandStoryBanner() {
   return (
     <section
       id="story"
-      className="scroll-mt-[118px] border-b border-[#FFB800]/20 bg-[#080810] px-4 pb-5 pt-[76px] md:scroll-mt-20 md:px-6 md:pb-6 md:pt-[84px]"
+      className="scroll-mt-[118px] border-b-2 border-[#FFB800]/40 bg-[#0a0812] px-4 pb-5 pt-[76px] md:scroll-mt-20 md:px-6 md:pb-6 md:pt-[84px]"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="relative overflow-hidden rounded-[20px] border border-[#FFB800]/25 bg-gradient-to-br from-[#FFB800]/[0.08] via-[#FF5A1F]/[0.04] to-white/[0.03] p-4 shadow-[0_0_48px_rgba(255,184,0,0.08)] sm:p-6 md:p-8">
+        <div className="relative overflow-hidden rounded-[20px] border-2 border-[#FFB800]/45 bg-gradient-to-br from-[#FFB800]/[0.12] via-[#FF5A1F]/[0.06] to-white/[0.04] p-4 shadow-[0_0_64px_rgba(255,184,0,0.15)] sm:p-6 md:p-8">
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(255,184,0,0.15)_0%,transparent_70%)]" />
 
           <div className="relative grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8">

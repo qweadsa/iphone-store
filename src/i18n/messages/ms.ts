@@ -19,6 +19,7 @@ export const ms = {
     supportPending: "Pautan sokongan belum dikonfigurasi",
     orders: "Jejak Pesanan",
     claimPrize: "Isi Alamat",
+    story: "Cerita Kami",
     login: "Log Masuk",
   },
   hero: {

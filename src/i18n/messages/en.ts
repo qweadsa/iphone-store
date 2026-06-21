@@ -19,6 +19,7 @@ export const en = {
     supportPending: "Support link not configured yet",
     orders: "Track Order",
     claimPrize: "Claim Prize",
+    story: "Our Story",
     login: "Sign In",
   },
   hero: {

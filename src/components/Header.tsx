@@ -89,6 +89,7 @@ export default function Header() {
     icon: string;
     highlight?: boolean;
   }[] = [
+    { href: "/#story", label: m.nav.story, icon: "📢", highlight: true },
     { href: "/#draw", label: m.nav.blindBox, icon: "🎁", highlight: true },
     { href: "/products", label: m.nav.shop, icon: "📱" },
     { href: "/orders", label: m.nav.orders, icon: "📋" },
@@ -220,7 +221,7 @@ export default function Header() {
         className="border-t border-white/[0.06] bg-[rgba(3,3,10,0.88)] md:hidden"
         aria-label="Mobile navigation"
       >
-        <div className="mx-auto grid max-w-6xl grid-cols-4 gap-1.5 px-2 py-2 sm:px-3">
+        <div className="mx-auto grid max-w-6xl grid-cols-5 gap-1 px-1.5 py-2 sm:px-3">
           {nav.map((item) => (
             <Link
               key={item.href}

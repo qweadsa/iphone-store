@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const HASH_TARGETS = new Set(["draw", "prizes"]);
+const HASH_TARGETS = new Set(["story", "draw", "prizes"]);
 
 function headerOffset(): number {
   if (typeof window === "undefined") return 0;

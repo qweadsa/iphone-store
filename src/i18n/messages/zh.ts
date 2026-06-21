@@ -21,6 +21,7 @@ export const zh: Messages = {
     supportPending: "客服链接尚未配置",
     orders: "查询订单",
     claimPrize: "填写地址",
+    story: "品牌故事",
     login: "登录",
   },
   hero: {
