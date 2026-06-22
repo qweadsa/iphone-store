@@ -82,7 +82,7 @@ npm ci
 
 echo "==> prisma"
 npx prisma generate
-npx prisma db push
+npx prisma db push --accept-data-loss
 # 不自动 seed：避免每次更新覆盖你在后台改过的奖品/配置
 # 仅首次空库需要时手动执行: npx prisma db seed
 
