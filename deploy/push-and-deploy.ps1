@@ -15,6 +15,14 @@ if (-not (Test-Path $key)) {
   Write-Error "Deploy SSH key not found: $key`nRun once: ssh-keygen -t ed25519 -f `"$key`" -N `"`"`""
 }
 
+$oauthFile = Join-Path $PSScriptRoot "google-oauth.env"
+if (Test-Path $oauthFile) {
+  Write-Host "==> upload Google OAuth config (not in git)"
+  scp -i $key -o BatchMode=yes -o StrictHostKeyChecking=accept-new $oauthFile "${user}@${hostName}:/var/www/iphone-store/deploy/google-oauth.env"
+} else {
+  Write-Warning "deploy/google-oauth.env missing — Google login may not work until you create it from google-oauth.env.example"
+}
+
 Write-Host "==> deploy on $user@$hostName"
 ssh -i $key -o BatchMode=yes -o StrictHostKeyChecking=accept-new "${user}@${hostName}" `
   "cd /var/www/iphone-store && sudo bash deploy/server-update.sh"
