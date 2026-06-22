@@ -13,7 +13,13 @@ export async function POST(req: Request) {
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    if (!user) {
+      return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
+    }
+    if (!user.passwordHash) {
+      return NextResponse.json({ error: "GOOGLE_ONLY" }, { status: 401 });
+    }
+    if (!(await verifyPassword(password, user.passwordHash))) {
       return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
     }
 

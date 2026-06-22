@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useUser } from "@/lib/user-context";
 import { useI18n } from "@/lib/i18n-context";
+import GoogleSignInButton, { isGoogleSignInEnabled } from "@/components/GoogleSignInButton";
 
 function RegisterForm() {
   const router = useRouter();
@@ -15,6 +16,7 @@ function RegisterForm() {
 
   const nextPath = searchParams.get("next")?.trim() || "/";
   const claimPayment = searchParams.get("claimPayment")?.trim() || "";
+  const googleEnabled = isGoogleSignInEnabled();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -70,6 +72,12 @@ function RegisterForm() {
 
       <form onSubmit={submit} className="mt-8 space-y-4">
         {error && <p className="text-sm text-red-400">{error}</p>}
+        {googleEnabled && (
+          <>
+            <GoogleSignInButton next={nextPath} claimPayment={claimPayment} label={a.googleSignIn} />
+            <p className="text-center text-xs text-[var(--color-muted)]">{a.orContinue}</p>
+          </>
+        )}
         <input
           required
           value={name}

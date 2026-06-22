@@ -2,9 +2,18 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useUser } from "@/lib/user-context";
 import { useI18n } from "@/lib/i18n-context";
+import GoogleSignInButton, { isGoogleSignInEnabled } from "@/components/GoogleSignInButton";
+
+function oauthErrorMessage(code: string | null, a: ReturnType<typeof useI18n>["messages"]["auth"]): string {
+  if (code === "google_denied") return a.googleDenied;
+  if (code === "google_conflict") return a.googleConflict;
+  if (code === "google_not_configured") return a.googleNotConfigured;
+  if (code === "google_failed" || code === "google_invalid") return a.googleAuthFailed;
+  return "";
+}
 
 function LoginForm() {
   const router = useRouter();
@@ -15,11 +24,17 @@ function LoginForm() {
 
   const nextPath = searchParams.get("next")?.trim() || "/";
   const claimPayment = searchParams.get("claimPayment")?.trim() || "";
+  const googleEnabled = isGoogleSignInEnabled();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const oauthErr = oauthErrorMessage(searchParams.get("error"), a);
+    if (oauthErr) setError(oauthErr);
+  }, [searchParams, a]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +48,7 @@ function LoginForm() {
     const data = await res.json();
     if (!res.ok) {
       setLoading(false);
-      setError(data.error ?? a.loginFailed);
+      setError(data.error === "GOOGLE_ONLY" ? a.googleOnlyAccount : (data.error ?? a.loginFailed));
       return;
     }
 
@@ -69,6 +84,12 @@ function LoginForm() {
 
       <form onSubmit={submit} className="mt-8 space-y-4">
         {error && <p className="text-sm text-red-400">{error}</p>}
+        {googleEnabled && (
+          <>
+            <GoogleSignInButton next={nextPath} claimPayment={claimPayment} label={a.googleSignIn} />
+            <p className="text-center text-xs text-[var(--color-muted)]">{a.orContinue}</p>
+          </>
+        )}
         <input
           type="email"
           required
