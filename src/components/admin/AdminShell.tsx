@@ -9,12 +9,13 @@ const nav = [
   { href: "/admin/blindbox", label: "盲盒管理", icon: "🎁", short: "盲盒" },
   { href: "/admin/products", label: "产品管理", icon: "📱", short: "产品" },
   { href: "/admin/orders", label: "订单查询", icon: "📋", short: "订单" },
+  { href: "/admin/users", label: "注册用户", icon: "👤", short: "用户" },
   { href: "/admin/payments", label: "收款 & 支付", icon: "💳", short: "收款" },
   { href: "/admin/settings", label: "站点设置", icon: "⚙️", short: "设置" },
 ];
 
 const mobileNav = nav.filter((item) =>
-  ["/admin", "/admin/blindbox", "/admin/orders", "/admin/products", "/admin/payments"].includes(
+  ["/admin", "/admin/blindbox", "/admin/orders", "/admin/users", "/admin/products"].includes(
     item.href,
   ),
 );

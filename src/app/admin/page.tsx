@@ -10,10 +10,11 @@ import TestDataCleanup from "@/components/admin/TestDataCleanup";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const [productCount, prizeCount, orderCount, config] = await Promise.all([
+  const [productCount, prizeCount, orderCount, userCount, config] = await Promise.all([
     prisma.product.count(),
     prisma.blindBoxPrize.count(),
     prisma.order.count().catch(() => 0),
+    prisma.user.count().catch(() => 0),
     prisma.blindBoxConfig.findFirst({ where: { id: 1 } }).then((c) => (c ? normalizeBlindBoxConfig(c) : null)),
   ]);
 
@@ -30,6 +31,7 @@ export default async function AdminDashboard() {
         {[
           { label: "产品数量", value: productCount, href: "/admin/products" },
           { label: "订单数量", value: orderCount, href: "/admin/orders" },
+          { label: "注册用户", value: userCount, href: "/admin/users" },
           { label: "盲盒奖品", value: prizeCount, href: "/admin/blindbox" },
           { label: "盲盒价格", value: blindBoxPrice, href: "/admin/blindbox" },
         ].map((item) => (
@@ -58,6 +60,9 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/orders" className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5">
             查询订单
+          </Link>
+          <Link href="/admin/users" className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5">
+            注册用户
           </Link>
           <Link href="/admin-setup" target="_blank" className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5">
             网站状态

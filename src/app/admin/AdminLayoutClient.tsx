@@ -8,6 +8,7 @@ const ADMIN_PANEL_PREFIXES = [
   "/admin/traffic",
   "/admin/payments",
   "/admin/orders",
+  "/admin/users",
   "/admin/products",
   "/admin/settings",
 ];
