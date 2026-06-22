@@ -53,9 +53,28 @@ if [ -f "deploy/admin-credentials.env" ]; then
     key="${line%%=*}"
     value="${line#*=}"
     [ -z "$key" ] || [ -z "$value" ] && continue
+    case "$value" in
+      *粘贴*|REPLACE_ME*|在此*) continue ;;
+    esac
     merge_env_var "$key" "$value" "$ENV_FILE"
     echo "    $key=***"
   done < "deploy/admin-credentials.env"
+fi
+if [ -f "deploy/google-oauth.env" ]; then
+  echo "==> sync .env (Google OAuth)"
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%%#*}"
+    line="$(echo "$line" | xargs)"
+    [ -z "$line" ] && continue
+    key="${line%%=*}"
+    value="${line#*=}"
+    [ -z "$key" ] || [ -z "$value" ] && continue
+    case "$value" in
+      *粘贴*|REPLACE_ME*|在此*) continue ;;
+    esac
+    merge_env_var "$key" "$value" "$ENV_FILE"
+    echo "    $key=***"
+  done < "deploy/google-oauth.env"
 fi
 
 echo "==> npm ci"
